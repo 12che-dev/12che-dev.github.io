@@ -9,8 +9,8 @@
     {
       "id": "Properties",
       "name": "화면에 보일 노드 이름",
-      "group": "1 (1:이론, 2:엔진, 3:리뷰, 4:기획서)",
-      "val": "20 (별 크기)"
+      "group": 1,
+      "val": 20
     },
     {
       "id": "sound-design-101",
@@ -23,10 +23,6 @@
     {
       "source": "fmod-basics",
       "target": "sound-design-101"
-    },
-    {
-      "source": "Properties",
-      "target": "연결할_다른_노트_이름"
     }
   ]
 }

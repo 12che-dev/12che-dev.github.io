@@ -50,6 +50,23 @@ export default function GraphCanvas({ data, onNodeClick, highlightNodes, isHighl
     return () => cancelAnimationFrame(animationFrameId);
   }, []); // No dependencies, runs forever smoothly
 
+  useEffect(() => {
+    const observer = new ResizeObserver((entries) => {
+      if (entries.length > 0) {
+        const { width, height } = entries[0].contentRect;
+        if (width > 0 && height > 0) {
+          setDimensions({ width, height });
+        }
+      }
+    });
+
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+    
+    return () => observer.disconnect();
+  }, []); // No dependencies, runs forever smoothly
+
   const NODE_COLORS = {
     1: '#00f0ff',
     2: '#ff007f',

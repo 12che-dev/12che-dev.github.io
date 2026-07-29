@@ -29,18 +29,31 @@ function generateGraph() {
     const node = {
       id: id,
       name: data.title || id,
-      group: data.group || 1,
-      val: data.val || 10
+      group: parseInt(data.group) || 1,
+      val: parseInt(data.val) || 10
     };
     
     nodes.push(node);
-    
+  });
+
+  // Second pass to add links, ensuring target exists
+  const nodeIds = new Set(nodes.map(n => n.id));
+  
+  files.forEach(file => {
+    const filePath = path.join(CONTENT_DIR, file);
+    const content = fs.readFileSync(filePath, 'utf-8');
+    const { data } = matter(content);
+    const id = file.replace('.md', '');
+
     if (data.links && Array.isArray(data.links)) {
       data.links.forEach(targetId => {
-        links.push({
-          source: id,
-          target: targetId
-        });
+        // Only add link if target node exists!
+        if (nodeIds.has(targetId)) {
+          links.push({
+            source: id,
+            target: targetId
+          });
+        }
       });
     }
   });
