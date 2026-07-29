@@ -1,0 +1,22 @@
+{
+  "nodes": [
+    {
+      "id": "fmod-basics",
+      "name": "FMOD 기초 스터디",
+      "group": 2,
+      "val": 15
+    },
+    {
+      "id": "sound-design-101",
+      "name": "사운드 디자인 개론",
+      "group": 1,
+      "val": 20
+    }
+  ],
+  "links": [
+    {
+      "source": "fmod-basics",
+      "target": "sound-design-101"
+    }
+  ]
+}
