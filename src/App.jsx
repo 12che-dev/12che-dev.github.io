@@ -3,13 +3,7 @@ import GraphCanvas from './components/GraphCanvas';
 import MarkdownRenderer from './components/MarkdownRenderer';
 import graphData from './data/graphData.json';
 import { Search } from 'lucide-react';
-
-const CATEGORIES = [
-  { id: 1, name: '사운드 디자인 이론', color: '#00f0ff' },
-  { id: 2, name: '엔진 / 미들웨어', color: '#ff007f' },
-  { id: 3, name: '강연 리뷰 (GDC 등)', color: '#a855f7' },
-  { id: 4, name: '역기획서 / 분석', color: '#10b981' }
-];
+import { CATEGORIES } from './config';
 
 function App() {
   const [selectedNode, setSelectedNode] = useState(null);

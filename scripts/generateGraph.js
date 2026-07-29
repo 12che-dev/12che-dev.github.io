@@ -14,17 +14,29 @@ function generateGraph() {
     fs.mkdirSync(CONTENT_DIR, { recursive: true });
   }
 
-  const files = fs.readdirSync(CONTENT_DIR).filter(f => f.endsWith('.md'));
-  
+  function getAllMdFiles(dirPath, arrayOfFiles = []) {
+    const files = fs.readdirSync(dirPath);
+    files.forEach(file => {
+      const fullPath = path.join(dirPath, file);
+      if (fs.statSync(fullPath).isDirectory()) {
+        getAllMdFiles(fullPath, arrayOfFiles);
+      } else if (file.endsWith('.md')) {
+        arrayOfFiles.push(fullPath);
+      }
+    });
+    return arrayOfFiles;
+  }
+
+  const files = getAllMdFiles(CONTENT_DIR);
   const nodes = [];
   const links = [];
 
   files.forEach(file => {
-    const filePath = path.join(CONTENT_DIR, file);
+    const filePath = file; // file is already absolute path
     const content = fs.readFileSync(filePath, 'utf-8');
     const { data } = matter(content);
     
-    const id = file.replace('.md', '');
+    const id = path.basename(file, '.md');
     
     const node = {
       id: id,
@@ -40,10 +52,10 @@ function generateGraph() {
   const nodeIds = new Set(nodes.map(n => n.id));
   
   files.forEach(file => {
-    const filePath = path.join(CONTENT_DIR, file);
+    const filePath = file; // file is already absolute path
     const content = fs.readFileSync(filePath, 'utf-8');
     const { data } = matter(content);
-    const id = file.replace('.md', '');
+    const id = path.basename(file, '.md');
 
     if (data.links && Array.isArray(data.links)) {
       data.links.forEach(targetId => {

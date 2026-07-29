@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
+import { CATEGORIES } from '../config';
 
 export default function GraphCanvas({ data, onNodeClick, highlightNodes, isHighlighting, selectedNodeId }) {
   const containerRef = useRef();
@@ -67,12 +68,11 @@ export default function GraphCanvas({ data, onNodeClick, highlightNodes, isHighl
     return () => observer.disconnect();
   }, []); // No dependencies, runs forever smoothly
 
-  const NODE_COLORS = {
-    1: '#00f0ff',
-    2: '#ff007f',
-    3: '#a855f7',
-    4: '#10b981'
-  };
+  // Convert array of categories to a color map map for fast lookup
+  const NODE_COLORS = CATEGORIES.reduce((acc, cat) => {
+    acc[cat.id] = cat.color;
+    return acc;
+  }, {});
 
   const hexToRgba = (hex, op) => {
     if (!hex) return `rgba(255, 255, 255, ${op})`;

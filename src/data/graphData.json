@@ -7,21 +7,31 @@
       "val": 15
     },
     {
-      "id": "Properties",
-      "name": "화면에 보일 노드 이름",
-      "group": 1,
-      "val": 20
-    },
-    {
       "id": "sound-design-101",
       "name": "사운드 디자인 개론",
       "group": 1,
       "val": 20
+    },
+    {
+      "id": "Cedec강연리뷰_별의커비-디스커버리",
+      "name": "CEDEC 강연_별의 커비 : 디스커버리 사운드 디자인 강연자료",
+      "group": 3,
+      "val": 20
+    },
+    {
+      "id": "gdc강연리뷰",
+      "name": "GDC강연)xxx사운드디자인",
+      "group": 1,
+      "val": 15
     }
   ],
   "links": [
     {
       "source": "fmod-basics",
+      "target": "sound-design-101"
+    },
+    {
+      "source": "gdc강연리뷰",
       "target": "sound-design-101"
     }
   ]
