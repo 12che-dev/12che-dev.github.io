@@ -1,9 +1,9 @@
 ---
 title: GDC강연)xxx사운드디자인
-group: 1
+group: 3
 val: 15
 links:
-  - sound-design-101
+  - "CEDEC 강연_별의 커비 : 디스커버리 사운드 디자인 강연자료"
 ---
 # GDC 강연 리뷰
 

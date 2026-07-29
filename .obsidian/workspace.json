@@ -13,7 +13,7 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "public/content/cedec_강연자료/gdc강연리뷰.md",
+                "file": "public/content/강연리뷰/GDC_강연자료/gdc강연리뷰.md",
                 "mode": "source",
                 "source": false
               },
@@ -94,7 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "public/content/cedec_강연자료/gdc강연리뷰.md",
+                "file": "public/content/강연리뷰/GDC_강연자료/gdc강연리뷰.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -113,7 +113,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "public/content/cedec_강연자료/gdc강연리뷰.md",
+                "file": "public/content/강연리뷰/GDC_강연자료/gdc강연리뷰.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
@@ -156,7 +156,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "public/content/cedec_강연자료/gdc강연리뷰.md",
+                "file": "public/content/강연리뷰/GDC_강연자료/gdc강연리뷰.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
@@ -185,10 +185,13 @@
   },
   "active": "13dd50aa43b20a69",
   "lastOpenFiles": [
-    "public/content/cedec_강연자료/Cedec강연리뷰_별의커비-디스커버리.md",
-    "public/content/sound-design-101.md",
     "public/content/fmod-basics.md",
-    "public/content/cedec_강연자료/gdc강연리뷰.md",
+    "public/content/강연리뷰/cedec_강연자료/Cedec강연리뷰_별의커비-디스커버리.md",
+    "public/content/강연리뷰/GDC_강연자료/gdc강연리뷰.md",
+    "public/content/sound-design-101.md",
+    "public/content/강연리뷰",
+    "public/content/강연리뷰/GDC_강연자료",
+    "public/content/무제.md",
     "dist/index.html",
     "dist/assets/index-DDkilA8M.css",
     "dist/assets/index-DlMc8o5m.js",
@@ -203,7 +206,6 @@
     "dist/favicon.svg",
     "dist",
     "src/config.js",
-    "public/content/cedec_강연자료",
     "src/assets/vite.svg",
     "src/assets/react.svg",
     "src/assets/hero.png",

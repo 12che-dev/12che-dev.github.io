@@ -114,7 +114,9 @@ function App() {
                 {selectedNode.name}
               </h2>
               
-              <MarkdownRenderer fileId={selectedNode.id} />
+              <div className="markdown-content">
+                <MarkdownRenderer filepath={`/content/${selectedNode.path || selectedNode.id + '.md'}`} />
+              </div>
             </div>
           </>
         )}

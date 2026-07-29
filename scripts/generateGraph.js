@@ -37,9 +37,11 @@ function generateGraph() {
     const { data } = matter(content);
     
     const id = path.basename(file, '.md');
+    const relativePath = path.relative(CONTENT_DIR, file).replace(/\\/g, '/');
     
     const node = {
       id: id,
+      path: relativePath,
       name: data.title || id,
       group: parseInt(data.group) || 1,
       val: parseInt(data.val) || 10
