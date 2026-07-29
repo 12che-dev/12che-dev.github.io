@@ -199,7 +199,11 @@ export default function GraphCanvas({ data, onNodeClick, highlightNodes, isHighl
   }, []); // Stable reference!
 
   return (
-    <div ref={containerRef} style={{ width: '100%', height: '100%' }}>
+    <div 
+      ref={containerRef} 
+      style={{ width: '100%', height: '100%' }}
+      onContextMenu={(e) => e.preventDefault()}
+    >
       <ForceGraph2D
         ref={fgRef}
         width={dimensions.width}
