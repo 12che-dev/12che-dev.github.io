@@ -7,24 +7,14 @@ export default function GraphCanvas({ data, onNodeClick, highlightNodes, isHighl
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [hoveredNodeId, setHoveredNodeId] = useState(null);
   
-  // For animation loop
-  const hoverStates = useRef(new Map());
-  const [, setRenderTick] = useState(0);
-
+  // Refs for stable callbacks
+  const isDragging = useRef(false);
+  const hoveredNodeIdRef = useRef(null);
+  const propsRef = useRef({ highlightNodes, isHighlighting, selectedNodeId });
+  
   useEffect(() => {
-    const updateDimensions = () => {
-      if (containerRef.current) {
-        setDimensions({
-          width: containerRef.current.clientWidth,
-          height: containerRef.current.clientHeight
-        });
-      }
-    };
-    
-    updateDimensions();
-    window.addEventListener('resize', updateDimensions);
-    return () => window.removeEventListener('resize', updateDimensions);
-  }, []);
+    propsRef.current = { highlightNodes, isHighlighting, selectedNodeId };
+  }, [highlightNodes, isHighlighting, selectedNodeId]);
 
   // Animation Loop Effect
   useEffect(() => {
@@ -34,19 +24,19 @@ export default function GraphCanvas({ data, onNodeClick, highlightNodes, isHighl
       let needsRedraw = false;
       
       hoverStates.current.forEach((state, nodeId) => {
-        const isHovered = hoveredNodeId === nodeId || selectedNodeId === nodeId;
+        const isHovered = hoveredNodeIdRef.current === nodeId || propsRef.current.selectedNodeId === nodeId;
         const target = isHovered ? 1 : 0;
         
         if (Math.abs(state.progress - target) > 0.01) {
-          state.progress += (target - state.progress) * 0.12; // Smooth easing speed
+          state.progress += (target - state.progress) * 0.12; 
           needsRedraw = true;
         } else {
-          state.progress = target; // snap to exact
+          state.progress = target; 
         }
       });
 
-      if (needsRedraw) {
-        setRenderTick(t => t + 1); // trigger re-render to pass new canvas object
+      if (needsRedraw && !isDragging.current) {
+        setRenderTick(t => t + 1); 
       }
       
       animationFrameId = requestAnimationFrame(animate);
@@ -54,7 +44,7 @@ export default function GraphCanvas({ data, onNodeClick, highlightNodes, isHighl
     
     animationFrameId = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animationFrameId);
-  }, [hoveredNodeId, selectedNodeId]);
+  }, []); // No dependencies, runs forever smoothly
 
   const NODE_COLORS = {
     1: '#00f0ff',
@@ -71,7 +61,7 @@ export default function GraphCanvas({ data, onNodeClick, highlightNodes, isHighl
     return `rgba(${r}, ${g}, ${b}, ${op})`;
   };
 
-  const paintNode = (node, ctx, globalScale) => {
+  const paintNode = React.useCallback((node, ctx, globalScale) => {
     if (!Number.isFinite(node.x) || !Number.isFinite(node.y)) return;
 
     const label = node.name;
@@ -79,21 +69,19 @@ export default function GraphCanvas({ data, onNodeClick, highlightNodes, isHighl
     ctx.font = `${fontSize}px Inter, sans-serif`;
     
     const baseColor = NODE_COLORS[node.group] || '#ffffff';
+    const { isHighlighting, highlightNodes } = propsRef.current;
     const isHighlighted = isHighlighting ? highlightNodes.has(node.id) : true;
     
-    // Initialize animation state if not exists
     if (!hoverStates.current.has(node.id)) {
       hoverStates.current.set(node.id, { progress: 0 });
     }
     const progress = hoverStates.current.get(node.id).progress;
     
-    // Interpolate values based on animation progress
-    const baseR = 3.0 + (1.5 * progress); // Grows from 3.0 to 4.5
+    const baseR = 3.0 + (1.5 * progress); 
 
     if (isHighlighted) {
-      // 1. Outer Corona (Much softer, natural spread)
-      const coronaR = baseR * (4 + (3 * progress)); // Grows up to 7x radius
-      const coronaOpacity = 0.05 + (0.05 * progress); // Max 0.1 opacity (very soft)
+      const coronaR = baseR * (4 + (3 * progress)); 
+      const coronaOpacity = 0.05 + (0.05 * progress); 
       
       const coronaGradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, coronaR);
       coronaGradient.addColorStop(0, hexToRgba(baseColor, coronaOpacity));
@@ -104,8 +92,7 @@ export default function GraphCanvas({ data, onNodeClick, highlightNodes, isHighl
       ctx.fillStyle = coronaGradient;
       ctx.fill();
 
-      // 2. Inner Glow
-      const glowR = baseR * (2 + (1.5 * progress)); // Grows up to 3.5x
+      const glowR = baseR * (2 + (1.5 * progress)); 
       const glowGradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, glowR);
       glowGradient.addColorStop(0, hexToRgba(baseColor, 0.5 + (0.3 * progress)));
       glowGradient.addColorStop(1, hexToRgba(baseColor, 0));
@@ -115,7 +102,6 @@ export default function GraphCanvas({ data, onNodeClick, highlightNodes, isHighl
       ctx.fillStyle = glowGradient;
       ctx.fill();
       
-      // 3. Bright Core
       ctx.beginPath();
       ctx.arc(node.x, node.y, baseR * (0.5 + 0.1 * progress), 0, 2 * Math.PI, false);
       ctx.fillStyle = '#ffffff';
@@ -124,7 +110,6 @@ export default function GraphCanvas({ data, onNodeClick, highlightNodes, isHighl
       ctx.fill();
       ctx.shadowBlur = 0;
 
-      // Text label (moves down slightly as node grows)
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillStyle = `rgba(255, 255, 255, ${0.7 + (0.3 * progress)})`;
@@ -133,16 +118,16 @@ export default function GraphCanvas({ data, onNodeClick, highlightNodes, isHighl
       ctx.fillText(label, node.x, node.y + 10 + (4 * progress));
       ctx.shadowBlur = 0; 
     } else {
-      // Dimmed state
       ctx.beginPath();
       ctx.arc(node.x, node.y, baseR, 0, 2 * Math.PI, false);
       ctx.fillStyle = hexToRgba(baseColor, 0.15);
       ctx.fill();
     }
-  };
+  }, []); // Stable reference!
 
   const handleNodeHover = React.useCallback((node) => {
-    setHoveredNodeId(node ? node.id : null);
+    hoveredNodeIdRef.current = node ? node.id : null;
+    if (!isDragging.current) setRenderTick(t => t + 1);
   }, []);
 
   const handleNodeClick = React.useCallback((node) => {
@@ -150,8 +135,47 @@ export default function GraphCanvas({ data, onNodeClick, highlightNodes, isHighl
       fgRef.current.centerAt(node.x, node.y, 800);
       fgRef.current.zoom(2.5, 800);
     }
+    // Access original prop via ref if needed, or we can just rely on closure since onNodeClick rarely changes
     onNodeClick(node);
   }, [onNodeClick]);
+  
+  const getLinkColor = React.useCallback((link) => {
+     const { highlightNodes, isHighlighting, selectedNodeId } = propsRef.current;
+     const hoveredNodeId = hoveredNodeIdRef.current;
+     const sId = typeof link.source === 'object' ? link.source.id : link.source;
+     const tId = typeof link.target === 'object' ? link.target.id : link.target;
+     
+     if (isHighlighting) {
+       if (highlightNodes.has(sId) && highlightNodes.has(tId)) {
+         return 'rgba(255, 255, 255, 0.4)';
+       }
+       return 'rgba(255, 255, 255, 0.03)';
+     }
+     
+     if (hoveredNodeId || selectedNodeId) {
+       const activeNode = hoveredNodeId || selectedNodeId;
+       if (sId === activeNode || tId === activeNode) {
+         return 'rgba(255, 255, 255, 0.5)';
+       }
+       return 'rgba(255, 255, 255, 0.05)';
+     }
+
+     return 'rgba(255, 255, 255, 0.15)';
+  }, []); // Stable reference!
+
+  const getLinkWidth = React.useCallback((link) => {
+     const { highlightNodes, isHighlighting, selectedNodeId } = propsRef.current;
+     const hoveredNodeId = hoveredNodeIdRef.current;
+     const sId = typeof link.source === 'object' ? link.source.id : link.source;
+     const tId = typeof link.target === 'object' ? link.target.id : link.target;
+     
+     if (hoveredNodeId || selectedNodeId) {
+       const activeNode = hoveredNodeId || selectedNodeId;
+       if (sId === activeNode || tId === activeNode) return 2;
+     }
+     if (isHighlighting && highlightNodes.has(sId) && highlightNodes.has(tId)) return 1.5;
+     return 1;
+  }, []); // Stable reference!
 
   return (
     <div ref={containerRef} style={{ width: '100%', height: '100%' }}>
@@ -162,39 +186,11 @@ export default function GraphCanvas({ data, onNodeClick, highlightNodes, isHighl
         graphData={data}
         nodeRelSize={4}
         onNodeHover={handleNodeHover}
-        linkColor={React.useCallback((link) => {
-           const sId = typeof link.source === 'object' ? link.source.id : link.source;
-           const tId = typeof link.target === 'object' ? link.target.id : link.target;
-           
-           if (isHighlighting) {
-             if (highlightNodes.has(sId) && highlightNodes.has(tId)) {
-               return 'rgba(255, 255, 255, 0.4)';
-             }
-             return 'rgba(255, 255, 255, 0.03)';
-           }
-           
-           if (hoveredNodeId || selectedNodeId) {
-             const activeNode = hoveredNodeId || selectedNodeId;
-             if (sId === activeNode || tId === activeNode) {
-               return 'rgba(255, 255, 255, 0.5)';
-             }
-             return 'rgba(255, 255, 255, 0.05)';
-           }
-
-           return 'rgba(255, 255, 255, 0.15)';
-        }, [isHighlighting, highlightNodes, hoveredNodeId, selectedNodeId])}
-        linkWidth={React.useCallback((link) => {
-           const sId = typeof link.source === 'object' ? link.source.id : link.source;
-           const tId = typeof link.target === 'object' ? link.target.id : link.target;
-           
-           if (hoveredNodeId || selectedNodeId) {
-             const activeNode = hoveredNodeId || selectedNodeId;
-             if (sId === activeNode || tId === activeNode) return 2;
-           }
-           if (isHighlighting && highlightNodes.has(sId) && highlightNodes.has(tId)) return 1.5;
-           return 1;
-        }, [isHighlighting, highlightNodes, hoveredNodeId, selectedNodeId])}
+        linkColor={getLinkColor}
+        linkWidth={getLinkWidth}
         onNodeClick={handleNodeClick}
+        onNodeDragStart={() => { isDragging.current = true; }}
+        onNodeDragEnd={() => { isDragging.current = false; }}
         backgroundColor="transparent"
         nodeCanvasObject={paintNode}
         d3VelocityDecay={0.3}
