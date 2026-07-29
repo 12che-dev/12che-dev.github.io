@@ -141,6 +141,18 @@ export default function GraphCanvas({ data, onNodeClick, highlightNodes, isHighl
     }
   };
 
+  const handleNodeHover = React.useCallback((node) => {
+    setHoveredNodeId(node ? node.id : null);
+  }, []);
+
+  const handleNodeClick = React.useCallback((node) => {
+    if (fgRef.current) {
+      fgRef.current.centerAt(node.x, node.y, 800);
+      fgRef.current.zoom(2.5, 800);
+    }
+    onNodeClick(node);
+  }, [onNodeClick]);
+
   return (
     <div ref={containerRef} style={{ width: '100%', height: '100%' }}>
       <ForceGraph2D
@@ -149,8 +161,8 @@ export default function GraphCanvas({ data, onNodeClick, highlightNodes, isHighl
         height={dimensions.height}
         graphData={data}
         nodeRelSize={4}
-        onNodeHover={(node) => setHoveredNodeId(node ? node.id : null)}
-        linkColor={(link) => {
+        onNodeHover={handleNodeHover}
+        linkColor={React.useCallback((link) => {
            const sId = typeof link.source === 'object' ? link.source.id : link.source;
            const tId = typeof link.target === 'object' ? link.target.id : link.target;
            
@@ -170,8 +182,8 @@ export default function GraphCanvas({ data, onNodeClick, highlightNodes, isHighl
            }
 
            return 'rgba(255, 255, 255, 0.15)';
-        }}
-        linkWidth={(link) => {
+        }, [isHighlighting, highlightNodes, hoveredNodeId, selectedNodeId])}
+        linkWidth={React.useCallback((link) => {
            const sId = typeof link.source === 'object' ? link.source.id : link.source;
            const tId = typeof link.target === 'object' ? link.target.id : link.target;
            
@@ -181,14 +193,8 @@ export default function GraphCanvas({ data, onNodeClick, highlightNodes, isHighl
            }
            if (isHighlighting && highlightNodes.has(sId) && highlightNodes.has(tId)) return 1.5;
            return 1;
-        }}
-        onNodeClick={(node) => {
-          if (fgRef.current) {
-            fgRef.current.centerAt(node.x, node.y, 800);
-            fgRef.current.zoom(2.5, 800);
-          }
-          onNodeClick(node);
-        }}
+        }, [isHighlighting, highlightNodes, hoveredNodeId, selectedNodeId])}
+        onNodeClick={handleNodeClick}
         backgroundColor="transparent"
         nodeCanvasObject={paintNode}
         d3VelocityDecay={0.3}
