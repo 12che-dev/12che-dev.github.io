@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "public/content/cedec_강연자료/Cedec강연리뷰_별의커비-디스커버리.md",
+                "file": "public/content/cedec_강연자료/gdc강연리뷰.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Cedec강연리뷰_별의커비-디스커버리"
+              "title": "gdc강연리뷰"
             }
           }
         ]
@@ -94,7 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "public/content/cedec_강연자료/Cedec강연리뷰_별의커비-디스커버리.md",
+                "file": "public/content/cedec_강연자료/gdc강연리뷰.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +104,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Cedec강연리뷰_별의커비-디스커버리 의 백링크"
+              "title": "gdc강연리뷰 의 백링크"
             }
           },
           {
@@ -113,12 +113,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "public/content/cedec_강연자료/Cedec강연리뷰_별의커비-디스커버리.md",
+                "file": "public/content/cedec_강연자료/gdc강연리뷰.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Cedec강연리뷰_별의커비-디스커버리 의 나가는 링크"
+              "title": "gdc강연리뷰 의 나가는 링크"
             }
           },
           {
@@ -156,13 +156,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "public/content/cedec_강연자료/Cedec강연리뷰_별의커비-디스커버리.md",
+                "file": "public/content/cedec_강연자료/gdc강연리뷰.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Cedec강연리뷰_별의커비-디스커버리 의 개요"
+              "title": "gdc강연리뷰 의 개요"
             }
           }
         ]
@@ -183,17 +183,18 @@
       "bases:새 베이스 생성하기": false
     }
   },
-  "active": "baded078ff35fc55",
+  "active": "13dd50aa43b20a69",
   "lastOpenFiles": [
-    "public/content/cedec_강연자료",
+    "public/content/cedec_강연자료/Cedec강연리뷰_별의커비-디스커버리.md",
+    "public/content/cedec_강연자료/gdc강연리뷰.md",
+    "public/content/sound-design-101.md",
     "public/content/fmod-basics.md",
+    "public/content/cedec_강연자료",
     "src/assets/vite.svg",
     "src/assets/react.svg",
     "src/assets/hero.png",
     "public/favicon.svg",
     "public/icons.svg",
-    "public/content/cedec_강연자료/Cedec강연리뷰_별의커비-디스커버리.md",
-    "public/content/sound-design-101.md",
     "README.md"
   ]
 }
