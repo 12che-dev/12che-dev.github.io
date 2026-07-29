@@ -2,36 +2,36 @@
   "nodes": [
     {
       "id": "fmod-basics",
+      "path": "fmod-basics.md",
       "name": "FMOD 기초 스터디",
       "group": 2,
       "val": 15
     },
     {
       "id": "sound-design-101",
+      "path": "sound-design-101.md",
       "name": "사운드 디자인 개론",
       "group": 1,
       "val": 20
     },
     {
       "id": "Cedec강연리뷰_별의커비-디스커버리",
+      "path": "강연리뷰/cedec_강연자료/Cedec강연리뷰_별의커비-디스커버리.md",
       "name": "CEDEC 강연_별의 커비 : 디스커버리 사운드 디자인 강연자료",
       "group": 3,
       "val": 20
     },
     {
       "id": "gdc강연리뷰",
+      "path": "강연리뷰/GDC_강연자료/gdc강연리뷰.md",
       "name": "GDC강연)xxx사운드디자인",
-      "group": 1,
+      "group": 3,
       "val": 15
     }
   ],
   "links": [
     {
       "source": "fmod-basics",
-      "target": "sound-design-101"
-    },
-    {
-      "source": "gdc강연리뷰",
       "target": "sound-design-101"
     }
   ]
