@@ -4,23 +4,23 @@ import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import remarkFrontmatter from 'remark-frontmatter';
 
-export default function MarkdownRenderer({ fileId }) {
+export default function MarkdownRenderer({ filepath }) {
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!fileId) return;
+    if (!filepath) return;
     
     setLoading(true);
-    fetch(`/content/${fileId}.md`)
+    fetch(filepath)
       .then(res => {
         if (!res.ok) throw new Error('File not found');
         return res.text();
       })
       .then(text => setContent(text))
-      .catch(err => setContent(`### 문서를 찾을 수 없습니다.\n\n\`/content/${fileId}.md\` 파일이 존재하는지 확인해주세요.`))
+      .catch(err => setContent(`### 문서를 찾을 수 없습니다.\n\n\`${filepath}\` 파일이 존재하는지 확인해주세요.`))
       .finally(() => setLoading(false));
-  }, [fileId]);
+  }, [filepath]);
 
   if (loading) return <div style={{ color: 'var(--text-muted)' }}>문서를 불러오는 중...</div>;
   if (!content) return null;
