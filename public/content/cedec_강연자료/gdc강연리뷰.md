@@ -5,4 +5,6 @@ val: 15
 links:
   - sound-design-101
 ---
+# GDC 강연 리뷰
+
 gdc강연)xxx 사운드 디자인 리뷰
