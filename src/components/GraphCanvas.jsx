@@ -7,6 +7,10 @@ export default function GraphCanvas({ data, onNodeClick, highlightNodes, isHighl
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [hoveredNodeId, setHoveredNodeId] = useState(null);
   
+  // For animation loop
+  const hoverStates = useRef(new Map());
+  const [, setRenderTick] = useState(0);
+
   // Refs for stable callbacks
   const isDragging = useRef(false);
   const hoveredNodeIdRef = useRef(null);
