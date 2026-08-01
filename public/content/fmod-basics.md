@@ -4,7 +4,6 @@ group: 2
 val: 15
 links:
   - sound-design-101
-  - gdc강연리뷰
 ---
 # FMOD 1일차
 
