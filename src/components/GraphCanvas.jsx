@@ -158,23 +158,27 @@ function initSpaceBackground(scene) {
 
       void main() {
           vec3 p = normalize(vPosition);
-          // Scale controls the size of the gas clouds. 
-          // uTime creates the slow moving flow effect.
-          vec3 q = p * 2.5 + uTime * 0.1; 
+          
+          // INCREASED SCALE: 15.0 instead of 2.5 so we see many detailed clouds, not just one giant blob
+          vec3 q = p * 15.0 + uTime * 0.05; 
           
           float n = fbm(q);
           n = abs(n); // Turbulent clouds
           
-          // Much brighter, vivid colors to ensure it's clearly visible
-          vec3 colBase = vec3(0.04, 0.05, 0.15); // Deep space blue
-          vec3 colNebula1 = vec3(0.4, 0.1, 0.7); // Bright purple
-          vec3 colNebula2 = vec3(0.1, 0.6, 0.8); // Cyan/Blue
-          vec3 colNebula3 = vec3(1.0, 0.3, 0.6); // Hot Pink
+          // INCREASED CONTRAST: Make the gas look more wispy and sharp
+          n = pow(n, 1.5) * 2.0; 
+          
+          // Colors: Deep space to vibrant nebula
+          vec3 colBase = vec3(0.01, 0.02, 0.08); // Dark space
+          vec3 colNebula1 = vec3(0.3, 0.1, 0.6); // Purple
+          vec3 colNebula2 = vec3(0.0, 0.5, 0.8); // Cyan
+          vec3 colNebula3 = vec3(1.0, 0.2, 0.5); // Hot Pink
           
           vec3 finalCol = colBase;
-          finalCol = mix(finalCol, colNebula1, smoothstep(0.1, 0.3, n));
-          finalCol = mix(finalCol, colNebula2, smoothstep(0.25, 0.6, n));
-          finalCol = mix(finalCol, colNebula3, smoothstep(0.5, 0.9, n));
+          // Tighter thresholds for distinct cloud shapes
+          finalCol = mix(finalCol, colNebula1, smoothstep(0.1, 0.4, n));
+          finalCol = mix(finalCol, colNebula2, smoothstep(0.4, 0.7, n));
+          finalCol = mix(finalCol, colNebula3, smoothstep(0.7, 1.0, n));
           
           gl_FragColor = vec4(finalCol, 1.0);
       }
