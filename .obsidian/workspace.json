@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "public/content/강연리뷰/GDC_강연자료/gdc강연리뷰.md",
+                "file": "public/content/fmod-basics.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "gdc강연리뷰"
+              "title": "fmod-basics"
             }
           }
         ]
@@ -187,6 +187,7 @@
   },
   "active": "13dd50aa43b20a69",
   "lastOpenFiles": [
+    "public/content/강연리뷰/GDC_강연자료/gdc강연리뷰.md",
     "node_modules/@rolldown/binding-win32-x64-msvc/rolldown-binding.win32-x64-msvc.node",
     "node_modules/@oxlint/binding-win32-x64-msvc/oxlint.win32-x64-msvc.node",
     "node_modules/preact/README.md",
@@ -199,7 +200,6 @@
     "node_modules/react-dom/react-dom.react-server.js",
     "node_modules/micromark/stream.d.ts",
     "node_modules/preact/package.json",
-    "node_modules/micromark/index.d.ts",
     "node_modules/d3-array/README.md",
     "node_modules/property-information/readme.md",
     "node_modules/oxlint/README.md",
