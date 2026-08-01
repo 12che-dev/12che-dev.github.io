@@ -14,10 +14,10 @@ function hexToRgb(hex) {
   } : { r: 255, g: 255, b: 255 };
 }
 
-// Texture generator for sharp stars/nodes (perfect circles)
-function createGlowTexture(r, g, b, a) {
+// Texture generators with Anti-Banding (Dithering)
+function createGlowTexture(r, g, b, a, soft = false) {
   const canvas = document.createElement('canvas');
-  const size = 128; 
+  const size = soft ? 512 : 128; // Massive resolution for soft clouds so noise doesn't scale up
   canvas.width = size;
   canvas.height = size;
   const ctx = canvas.getContext('2d');
@@ -25,24 +25,49 @@ function createGlowTexture(r, g, b, a) {
   const center = size / 2;
   const gradient = ctx.createRadialGradient(center, center, 0, center, center, center);
   
-  gradient.addColorStop(0, `rgba(${r},${g},${b},${a})`);
-  gradient.addColorStop(0.15, `rgba(${r},${g},${b},${a})`);
-  gradient.addColorStop(1, `rgba(${r},${g},${b},0)`);
+  if (soft) {
+    // Smoother multi-stop curve to hide harsh edges
+    gradient.addColorStop(0, `rgba(${r},${g},${b},${a})`);
+    gradient.addColorStop(0.3, `rgba(${r},${g},${b},${a * 0.7})`);
+    gradient.addColorStop(0.6, `rgba(${r},${g},${b},${a * 0.2})`);
+    gradient.addColorStop(1, `rgba(${r},${g},${b},0)`);
+  } else {
+    // Sharper gradient for node stars
+    gradient.addColorStop(0, `rgba(${r},${g},${b},${a})`);
+    gradient.addColorStop(0.15, `rgba(${r},${g},${b},${a})`);
+    gradient.addColorStop(1, `rgba(${r},${g},${b},0)`);
+  }
   
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, size, size);
   
+  // Dithering: Add subtle noise to eliminate color banding (rings)
+  if (soft) {
+    const imgData = ctx.getImageData(0, 0, size, size);
+    const data = imgData.data;
+    for (let i = 0; i < data.length; i += 4) {
+      if (data[i+3] > 0) { // Only affect non-transparent pixels
+        // Reduced noise multiplier from 5 to 1.5 so it doesn't look grainy when zoomed
+        const noise = (Math.random() - 0.5) * 1.5; 
+        data[i] = Math.min(255, Math.max(0, data[i] + noise));
+        data[i+1] = Math.min(255, Math.max(0, data[i+1] + noise));
+        data[i+2] = Math.min(255, Math.max(0, data[i+2] + noise));
+      }
+    }
+    ctx.putImageData(imgData, 0, 0);
+  }
+  
   const tex = new THREE.CanvasTexture(canvas);
-  tex.minFilter = THREE.LinearFilter;
+  tex.minFilter = THREE.LinearMipmapLinearFilter;
+  tex.magFilter = THREE.LinearFilter;
   return tex;
 }
-
 
 const GLOW_TEXTURES = {};
 function getGlowTexture(hexColor) {
   if (!GLOW_TEXTURES[hexColor]) {
     const { r, g, b } = hexToRgb(hexColor);
-    GLOW_TEXTURES[hexColor] = createGlowTexture(r, g, b, 1.0);
+    GLOW_TEXTURES[hexColor] = createGlowTexture(r, g, b, 1.0, false);
   }
   return GLOW_TEXTURES[hexColor];
 }
@@ -105,108 +130,58 @@ function initSpaceBackground(scene) {
   const stars = new THREE.Points(starGeo, starMat);
   bgGroup.add(stars);
 
-  // 2. Volumetric Nebula Gas Clouds (GPU ShaderMaterial)
-  // Increased segments to 64 for smoother geometry just in case.
-  const nebulaGeo = new THREE.SphereGeometry(1000, 64, 64);
-  const shaderMat = new THREE.ShaderMaterial({
-    vertexShader: `
-      varying vec3 vPosition;
-      void main() {
-        // CRITICAL FIX: Normalize position in vertex shader so the varying is in [-1, 1] range.
-        // Passing radius 1000 to the fragment shader caused massive 'mediump' precision loss on Windows/ANGLE, creating grid blocks!
-        vPosition = normalize(position);
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `,
-    fragmentShader: `
-      precision highp float; // CRITICAL: Force high precision for math to prevent any artifacts
-      
-      uniform float uTime;
-      varying vec3 vPosition;
-
-      // Compact 3D Hash
-      vec3 hash(vec3 p) {
-          p = vec3(dot(p, vec3(127.1, 311.7, 74.7)),
-                   dot(p, vec3(269.5, 183.3, 246.1)),
-                   dot(p, vec3(113.5, 271.9, 124.6)));
-          return -1.0 + 2.0 * fract(sin(p) * 4375.85453123);
-      }
-
-      // 3D Noise
-      float noise(vec3 p) {
-          vec3 i = floor(p);
-          vec3 f = fract(p);
-          vec3 u = f * f * (3.0 - 2.0 * f);
-          return mix(mix(mix(dot(hash(i + vec3(0.0,0.0,0.0)), f - vec3(0.0,0.0,0.0)), 
-                             dot(hash(i + vec3(1.0,0.0,0.0)), f - vec3(1.0,0.0,0.0)), u.x),
-                         mix(dot(hash(i + vec3(0.0,1.0,0.0)), f - vec3(0.0,1.0,0.0)), 
-                             dot(hash(i + vec3(1.0,1.0,0.0)), f - vec3(1.0,1.0,0.0)), u.x), u.y),
-                     mix(mix(dot(hash(i + vec3(0.0,0.0,1.0)), f - vec3(0.0,0.0,1.0)), 
-                             dot(hash(i + vec3(1.0,0.0,1.0)), f - vec3(1.0,0.0,1.0)), u.x),
-                         mix(dot(hash(i + vec3(0.0,1.0,1.0)), f - vec3(0.0,1.0,1.0)), 
-                             dot(hash(i + vec3(1.0,1.0,1.0)), f - vec3(1.0,1.0,1.0)), u.x), u.y), u.z);
-      }
-
-      // Fractional Brownian Motion (FBM)
-      float fbm(vec3 x) {
-          float v = 0.0;
-          float a = 0.5;
-          vec3 shift = vec3(100.0);
-          for (int i = 0; i < 5; ++i) { 
-              v += a * noise(x);
-              x = x * 2.0 + shift;
-              a *= 0.5;
-          }
-          return v;
-      }
-
-      void main() {
-          // vPosition is already normalized in vertex shader, but re-normalize to handle interpolation shrinkage
-          vec3 p = normalize(vPosition);
-          
-          // Slightly larger clouds, slower movement
-          vec3 q = p * 8.0 + uTime * 0.02;  
-          
-          float n = fbm(q);
-          n = abs(n); 
-          
-          // 🌟 THE MAGIC TOUCH: Galactic Band Mask
-          // Instead of filling the whole sky with fog, concentrate it at the equator
-          // like a majestic Milky Way rift, leaving the top and bottom as deep empty space.
-          float band = smoothstep(0.7, 0.1, abs(p.y)); 
-          n *= band; 
-          
-          // Contrast for wispy edges
-          n = pow(n, 1.2) * 2.5; 
-          
-          // Colors: Deep space to vibrant nebula core
-          vec3 colBase = vec3(0.01, 0.015, 0.05); // Pure deep dark space
-          vec3 colNebula1 = vec3(0.15, 0.05, 0.4); // Deep faint purple edges
-          vec3 colNebula2 = vec3(0.1, 0.4, 0.8); // Vivid blue main gas
-          vec3 colNebula3 = vec3(1.0, 0.3, 0.7); // Bright pink/magenta glowing core
-          
-          vec3 finalCol = colBase;
-          finalCol = mix(finalCol, colNebula1, smoothstep(0.1, 0.3, n));
-          finalCol = mix(finalCol, colNebula2, smoothstep(0.3, 0.7, n));
-          finalCol = mix(finalCol, colNebula3, smoothstep(0.7, 1.0, n));
-          
-          gl_FragColor = vec4(finalCol, 1.0);
-      }
-    `,
-    uniforms: {
-      uTime: { value: 0 }
-    },
-    side: THREE.BackSide,
-    depthWrite: false,
-    depthTest: false // Ensures it always renders behind everything
-  });
+  // 2. Volumetric Nebula Gas Clouds (Sprites)
+  const cloudCount = 50;
+  // Use RGB + Alpha for the anti-banding texture generator
+  const cloudTexBlue = createGlowTexture(40, 80, 220, 0.12, true);
+  const cloudTexPurple = createGlowTexture(140, 40, 200, 0.12, true);
+  const cloudTexPink = createGlowTexture(200, 50, 150, 0.08, true);
+  const cloudTexDarkBlue = createGlowTexture(10, 30, 100, 0.25, true);
   
-  const nebulaMesh = new THREE.Mesh(nebulaGeo, shaderMat);
-  nebulaMesh.renderOrder = -100; // Force it to render very first
-  scene.add(nebulaMesh); // Add to scene directly so it doesn't inherit bgGroup rotation
+  const textures = [cloudTexBlue, cloudTexPurple, cloudTexPink, cloudTexDarkBlue];
+  
+  const clouds = [];
+  for(let i=0; i < cloudCount; i++) {
+    const mat = new THREE.SpriteMaterial({
+      map: textures[Math.floor(Math.random() * textures.length)],
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      opacity: 0.3 + Math.random() * 0.7,
+      dithering: true // Native Three.js dithering to help with banding
+    });
+    const sprite = new THREE.Sprite(mat);
+    
+    // Place clouds WAY far away so camera doesn't fly through them
+    const r = 3000 + Math.random() * 2000;
+    const theta = 2 * Math.PI * Math.random();
+    // Concentrate near the equator for a 'rift' look, but allow some spread
+    const phi = Math.PI/2 + (Math.random() - 0.5) * 1.5; 
+    
+    sprite.position.x = r * Math.sin(phi) * Math.cos(theta);
+    sprite.position.y = r * Math.sin(phi) * Math.sin(theta);
+    sprite.position.z = r * Math.cos(phi);
+    
+    // Scale up proportionally since they are further away
+    const scale = 3000 + Math.random() * 4000;
+    sprite.scale.set(scale, scale, 1);
+    
+    // Initial random rotation for variety
+    sprite.material.rotation = Math.random() * Math.PI * 2;
+
+    sprite.userData = {
+      rotSpeed: (Math.random() - 0.5) * 0.002,
+      pulseSpeed: 0.001 + Math.random() * 0.001,
+      baseScale: scale,
+      phase: Math.random() * Math.PI * 2
+    };
+    
+    clouds.push(sprite);
+    bgGroup.add(sprite);
+  }
 
   scene.add(bgGroup);
-  return { bgGroup, shaderMat, nebulaMesh };
+  return { bgGroup, clouds };
 }
 
 export default function GraphCanvas({ data, onNodeClick, highlightNodes, isHighlighting, selectedNodeId }) {
@@ -255,26 +230,19 @@ export default function GraphCanvas({ data, onNodeClick, highlightNodes, isHighl
 
       // 2. Animate 3D Background (Nebula & Stars)
       if (sceneState.current.bgObjects) {
-        const { bgGroup, shaderMat, nebulaMesh } = sceneState.current.bgObjects;
+        const { bgGroup, clouds } = sceneState.current.bgObjects;
         const time = Date.now();
         
-        // Very slow parallax rotation for the whole galaxy (Stars)
+        // Very slow parallax rotation for the whole galaxy
         bgGroup.rotation.y += 0.0003;
         bgGroup.rotation.x += 0.0001;
         
-        // Flowing nebula shader
-        if (shaderMat) {
-           shaderMat.uniforms.uTime.value = time * 0.0001;
-        }
-
-        // Keep the nebula skybox centered on the camera so we never fly out of it
-        if (fgRef.current && nebulaMesh) {
-          const cam = fgRef.current.camera();
-          if (cam) {
-            // Because bgGroup is rotating, we need to set world position or just apply inverse
-            nebulaMesh.position.copy(cam.position);
-          }
-        }
+        // Dynamic volumetric clouds pulsing and twisting
+        clouds.forEach(cloud => {
+           cloud.material.rotation += cloud.userData.rotSpeed;
+           const scale = cloud.userData.baseScale * (1 + 0.15 * Math.sin(time * cloud.userData.pulseSpeed + cloud.userData.phase));
+           cloud.scale.set(scale, scale, 1);
+        });
       }
 
       // 3. Animate Node Hover States
