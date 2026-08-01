@@ -17,7 +17,7 @@ function hexToRgb(hex) {
 // Texture generators with Anti-Banding (Dithering)
 function createGlowTexture(r, g, b, a, soft = false) {
   const canvas = document.createElement('canvas');
-  const size = soft ? 256 : 128; // Higher resolution for soft clouds
+  const size = soft ? 512 : 128; // Massive resolution for soft clouds so noise doesn't scale up
   canvas.width = size;
   canvas.height = size;
   const ctx = canvas.getContext('2d');
@@ -47,7 +47,8 @@ function createGlowTexture(r, g, b, a, soft = false) {
     const data = imgData.data;
     for (let i = 0; i < data.length; i += 4) {
       if (data[i+3] > 0) { // Only affect non-transparent pixels
-        const noise = (Math.random() - 0.5) * 5; 
+        // Reduced noise multiplier from 5 to 1.5 so it doesn't look grainy when zoomed
+        const noise = (Math.random() - 0.5) * 1.5; 
         data[i] = Math.min(255, Math.max(0, data[i] + noise));
         data[i+1] = Math.min(255, Math.max(0, data[i+1] + noise));
         data[i+2] = Math.min(255, Math.max(0, data[i+2] + noise));
@@ -57,7 +58,8 @@ function createGlowTexture(r, g, b, a, soft = false) {
   }
   
   const tex = new THREE.CanvasTexture(canvas);
-  tex.minFilter = THREE.LinearFilter;
+  tex.minFilter = THREE.LinearMipmapLinearFilter;
+  tex.magFilter = THREE.LinearFilter;
   return tex;
 }
 
@@ -145,12 +147,13 @@ function initSpaceBackground(scene) {
       transparent: true,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
-      opacity: 0.3 + Math.random() * 0.7
+      opacity: 0.3 + Math.random() * 0.7,
+      dithering: true // Native Three.js dithering to help with banding
     });
     const sprite = new THREE.Sprite(mat);
     
-    // Place clouds far away forming a beautiful galactic band
-    const r = 500 + Math.random() * 800;
+    // Place clouds WAY far away so camera doesn't fly through them
+    const r = 3000 + Math.random() * 2000;
     const theta = 2 * Math.PI * Math.random();
     // Concentrate near the equator for a 'rift' look, but allow some spread
     const phi = Math.PI/2 + (Math.random() - 0.5) * 1.5; 
@@ -159,8 +162,8 @@ function initSpaceBackground(scene) {
     sprite.position.y = r * Math.sin(phi) * Math.sin(theta);
     sprite.position.z = r * Math.cos(phi);
     
-    // Giant scale to simulate large gas volumes
-    const scale = 500 + Math.random() * 1000;
+    // Scale up proportionally since they are further away
+    const scale = 3000 + Math.random() * 4000;
     sprite.scale.set(scale, scale, 1);
     
     // Initial random rotation for variety
