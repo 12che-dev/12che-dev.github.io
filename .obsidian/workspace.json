@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "public/content/sound-design-101.md",
+                "file": "public/content/강연리뷰/GDC_강연자료/gdc강연리뷰.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "sound-design-101"
+              "title": "gdc강연리뷰"
             }
           }
         ]
@@ -187,18 +187,18 @@
   },
   "active": "13dd50aa43b20a69",
   "lastOpenFiles": [
+    "public/content/강연리뷰/cedec_강연자료/Cedec강연리뷰_별의커비-디스커버리.md",
+    "public/content/강연리뷰/GDC_강연자료/gdc강연리뷰.md",
+    "public/content/sound-design-101.md",
     "TODO.md",
     "TODOHISTORY.md",
     "public/content/fmod-basics.md",
-    "public/content/강연리뷰/GDC_강연자료/gdc강연리뷰.md",
     "dist/assets/index-CXjLYGHJ.js",
     "dist/content/강연리뷰/GDC_강연자료/gdc강연리뷰.md",
     "dist/content/강연리뷰/GDC_강연자료",
     "dist/content/강연리뷰/cedec_강연자료/Cedec강연리뷰_별의커비-디스커버리.md",
     "dist/content/강연리뷰/cedec_강연자료",
     "dist/content/강연리뷰",
-    "public/content/강연리뷰/cedec_강연자료/Cedec강연리뷰_별의커비-디스커버리.md",
-    "public/content/sound-design-101.md",
     "public/content/강연리뷰",
     "public/content/강연리뷰/GDC_강연자료",
     "public/content/무제.md",
