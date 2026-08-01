@@ -49,7 +49,8 @@ function createOrganicCloudTexture(r, g, b, a) {
   const drawPuff = (cx, cy, radius, intensity) => {
     const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
     gradient.addColorStop(0, `rgba(${r},${g},${b},${intensity})`);
-    gradient.addColorStop(0.5, `rgba(${r},${g},${b},${intensity * 0.3})`);
+    gradient.addColorStop(0.4, `rgba(${r},${g},${b},${intensity * 0.6})`);
+    gradient.addColorStop(0.8, `rgba(${r},${g},${b},${intensity * 0.1})`);
     gradient.addColorStop(1, `rgba(${r},${g},${b},0)`);
     ctx.fillStyle = gradient;
     ctx.beginPath();
@@ -58,19 +59,30 @@ function createOrganicCloudTexture(r, g, b, a) {
   };
   
   // Base central puff
-  drawPuff(size/2, size/2, size/2 * 0.9, a);
+  drawPuff(size/2, size/2, size/2 * 0.8, a);
   
   // Add multiple random offset puffs to break the perfect circular shape
-  // This creates a chaotic, organic cloud lump. When dozens overlap, it looks like real gas instead of geometric rings.
-  for (let i = 0; i < 20; i++) {
+  for (let i = 0; i < 30; i++) {
     const angle = Math.random() * Math.PI * 2;
-    // Keep puffs near the center to avoid clipping at canvas edges
     const dist = Math.random() * (size / 4);
     const cx = size/2 + Math.cos(angle) * dist;
     const cy = size/2 + Math.sin(angle) * dist;
-    const radius = (size / 5) + Math.random() * (size / 3);
-    drawPuff(cx, cy, radius, a * 0.9);
+    const radius = (size / 6) + Math.random() * (size / 4);
+    drawPuff(cx, cy, radius, a * 0.7);
   }
+  
+  // CRITICAL: Dithering to prevent 8-bit color banding/moiré patterns on large gradients
+  const imgData = ctx.getImageData(0, 0, size, size);
+  const data = imgData.data;
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i+3] > 0) {
+      const noise = (Math.random() - 0.5) * 4; 
+      data[i] = Math.min(255, Math.max(0, data[i] + noise));
+      data[i+1] = Math.min(255, Math.max(0, data[i+1] + noise));
+      data[i+2] = Math.min(255, Math.max(0, data[i+2] + noise));
+    }
+  }
+  ctx.putImageData(imgData, 0, 0);
   
   const tex = new THREE.CanvasTexture(canvas);
   tex.minFilter = THREE.LinearMipmapLinearFilter;
@@ -147,11 +159,11 @@ function initSpaceBackground(scene) {
 
   // 2. Volumetric Nebula Gas Clouds (Sprites)
   const cloudCount = 60;
-  // Use lower opacity and darker colors to avoid blowout with Additive Blending
-  const cloudTexBlue = createOrganicCloudTexture(30, 60, 255, 0.08);
-  const cloudTexPurple = createOrganicCloudTexture(120, 30, 200, 0.08);
-  const cloudTexPink = createOrganicCloudTexture(200, 40, 120, 0.05);
-  const cloudTexDarkBlue = createOrganicCloudTexture(10, 15, 120, 0.15);
+  // Use richer colors for Normal Blending
+  const cloudTexBlue = createOrganicCloudTexture(30, 60, 220, 0.25);
+  const cloudTexPurple = createOrganicCloudTexture(120, 30, 180, 0.2);
+  const cloudTexPink = createOrganicCloudTexture(180, 40, 100, 0.15);
+  const cloudTexDarkBlue = createOrganicCloudTexture(10, 15, 100, 0.35);
   
   const textures = [cloudTexBlue, cloudTexPurple, cloudTexPink, cloudTexDarkBlue];
   
@@ -160,9 +172,9 @@ function initSpaceBackground(scene) {
     const mat = new THREE.SpriteMaterial({
       map: textures[Math.floor(Math.random() * textures.length)],
       transparent: true,
-      blending: THREE.AdditiveBlending, // Back to Additive for flawless, edge-free overlaps
+      blending: THREE.NormalBlending, // Normal Blending prevents extreme blowout
       depthWrite: false,
-      opacity: 0.2 + Math.random() * 0.4, // Keep opacity low so it doesn't bloom to white
+      opacity: 0.15 + Math.random() * 0.25, // Soft opacity for subtle depth
       dithering: true
     });
     const sprite = new THREE.Sprite(mat);
