@@ -159,25 +159,30 @@ function initSpaceBackground(scene) {
       void main() {
           vec3 p = normalize(vPosition);
           
-          // INCREASED SCALE: 15.0 instead of 2.5 so we see many detailed clouds, not just one giant blob
-          vec3 q = p * 15.0 + uTime * 0.05; 
+          // Slightly larger clouds, slower movement
+          vec3 q = p * 8.0 + uTime * 0.02; 
           
           float n = fbm(q);
-          n = abs(n); // Turbulent clouds
+          n = abs(n); 
           
-          // INCREASED CONTRAST: Make the gas look more wispy and sharp
-          n = pow(n, 1.5) * 2.0; 
+          // 🌟 THE MAGIC TOUCH: Galactic Band Mask
+          // Instead of filling the whole sky with fog, concentrate it at the equator
+          // like a majestic Milky Way rift, leaving the top and bottom as deep empty space.
+          float band = smoothstep(0.7, 0.1, abs(p.y)); 
+          n *= band; 
           
-          // Colors: Deep space to vibrant nebula
-          vec3 colBase = vec3(0.01, 0.02, 0.08); // Dark space
-          vec3 colNebula1 = vec3(0.3, 0.1, 0.6); // Purple
-          vec3 colNebula2 = vec3(0.0, 0.5, 0.8); // Cyan
-          vec3 colNebula3 = vec3(1.0, 0.2, 0.5); // Hot Pink
+          // Contrast for wispy edges
+          n = pow(n, 1.2) * 2.5; 
+          
+          // Colors: Deep space to vibrant nebula core
+          vec3 colBase = vec3(0.01, 0.015, 0.05); // Pure deep dark space
+          vec3 colNebula1 = vec3(0.15, 0.05, 0.4); // Deep faint purple edges
+          vec3 colNebula2 = vec3(0.1, 0.4, 0.8); // Vivid blue main gas
+          vec3 colNebula3 = vec3(1.0, 0.3, 0.7); // Bright pink/magenta glowing core
           
           vec3 finalCol = colBase;
-          // Tighter thresholds for distinct cloud shapes
-          finalCol = mix(finalCol, colNebula1, smoothstep(0.1, 0.4, n));
-          finalCol = mix(finalCol, colNebula2, smoothstep(0.4, 0.7, n));
+          finalCol = mix(finalCol, colNebula1, smoothstep(0.1, 0.3, n));
+          finalCol = mix(finalCol, colNebula2, smoothstep(0.3, 0.7, n));
           finalCol = mix(finalCol, colNebula3, smoothstep(0.7, 1.0, n));
           
           gl_FragColor = vec4(finalCol, 1.0);
