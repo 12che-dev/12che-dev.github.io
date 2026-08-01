@@ -187,6 +187,7 @@
   },
   "active": "13dd50aa43b20a69",
   "lastOpenFiles": [
+    "dist/assets/index-Bv1ORmBE.js",
     "dist/index.html",
     "dist/assets/index-CpDIJLuh.js",
     "dist/assets/index-CE-KsjnD.css",
@@ -206,7 +207,6 @@
     "dist/content/강연리뷰",
     "dist/content/sound-design-101.md",
     "dist/content/fmod-basics.md",
-    "dist/content",
     "node_modules/three-spritetext/README.md",
     "node_modules/three/README.md",
     "node_modules/three/examples/jsm/libs/draco/README.md",

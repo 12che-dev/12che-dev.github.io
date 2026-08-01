@@ -14,10 +14,10 @@ function hexToRgb(hex) {
   } : { r: 255, g: 255, b: 255 };
 }
 
-// Texture generators with Anti-Banding (Dithering)
-function createGlowTexture(r, g, b, a, soft = false) {
+// Texture generator for sharp stars/nodes (perfect circles)
+function createGlowTexture(r, g, b, a) {
   const canvas = document.createElement('canvas');
-  const size = soft ? 512 : 128; // Massive resolution for soft clouds so noise doesn't scale up
+  const size = 128; 
   canvas.width = size;
   canvas.height = size;
   const ctx = canvas.getContext('2d');
@@ -25,36 +25,51 @@ function createGlowTexture(r, g, b, a, soft = false) {
   const center = size / 2;
   const gradient = ctx.createRadialGradient(center, center, 0, center, center, center);
   
-  if (soft) {
-    // Smoother multi-stop curve to hide harsh edges
-    gradient.addColorStop(0, `rgba(${r},${g},${b},${a})`);
-    gradient.addColorStop(0.3, `rgba(${r},${g},${b},${a * 0.7})`);
-    gradient.addColorStop(0.6, `rgba(${r},${g},${b},${a * 0.2})`);
-    gradient.addColorStop(1, `rgba(${r},${g},${b},0)`);
-  } else {
-    // Sharper gradient for node stars
-    gradient.addColorStop(0, `rgba(${r},${g},${b},${a})`);
-    gradient.addColorStop(0.15, `rgba(${r},${g},${b},${a})`);
-    gradient.addColorStop(1, `rgba(${r},${g},${b},0)`);
-  }
+  gradient.addColorStop(0, `rgba(${r},${g},${b},${a})`);
+  gradient.addColorStop(0.15, `rgba(${r},${g},${b},${a})`);
+  gradient.addColorStop(1, `rgba(${r},${g},${b},0)`);
   
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, size, size);
   
-  // Dithering: Add subtle noise to eliminate color banding (rings)
-  if (soft) {
-    const imgData = ctx.getImageData(0, 0, size, size);
-    const data = imgData.data;
-    for (let i = 0; i < data.length; i += 4) {
-      if (data[i+3] > 0) { // Only affect non-transparent pixels
-        // Reduced noise multiplier from 5 to 1.5 so it doesn't look grainy when zoomed
-        const noise = (Math.random() - 0.5) * 1.5; 
-        data[i] = Math.min(255, Math.max(0, data[i] + noise));
-        data[i+1] = Math.min(255, Math.max(0, data[i+1] + noise));
-        data[i+2] = Math.min(255, Math.max(0, data[i+2] + noise));
-      }
-    }
-    ctx.putImageData(imgData, 0, 0);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.minFilter = THREE.LinearFilter;
+  return tex;
+}
+
+// Texture generator for organic, lumpy gas clouds (prevents lens flare/ripple artifacts)
+function createOrganicCloudTexture(r, g, b, a) {
+  const canvas = document.createElement('canvas');
+  const size = 512; 
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  
+  // Helper to draw a single soft puff
+  const drawPuff = (cx, cy, radius, intensity) => {
+    const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+    gradient.addColorStop(0, `rgba(${r},${g},${b},${intensity})`);
+    gradient.addColorStop(0.5, `rgba(${r},${g},${b},${intensity * 0.3})`);
+    gradient.addColorStop(1, `rgba(${r},${g},${b},0)`);
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.fill();
+  };
+  
+  // Base central puff
+  drawPuff(size/2, size/2, size/2 * 0.9, a);
+  
+  // Add multiple random offset puffs to break the perfect circular shape
+  // This creates a chaotic, organic cloud lump. When dozens overlap, it looks like real gas instead of geometric rings.
+  for (let i = 0; i < 20; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    // Keep puffs near the center to avoid clipping at canvas edges
+    const dist = Math.random() * (size / 4);
+    const cx = size/2 + Math.cos(angle) * dist;
+    const cy = size/2 + Math.sin(angle) * dist;
+    const radius = (size / 5) + Math.random() * (size / 3);
+    drawPuff(cx, cy, radius, a * 0.9);
   }
   
   const tex = new THREE.CanvasTexture(canvas);
@@ -67,7 +82,7 @@ const GLOW_TEXTURES = {};
 function getGlowTexture(hexColor) {
   if (!GLOW_TEXTURES[hexColor]) {
     const { r, g, b } = hexToRgb(hexColor);
-    GLOW_TEXTURES[hexColor] = createGlowTexture(r, g, b, 1.0, false);
+    GLOW_TEXTURES[hexColor] = createGlowTexture(r, g, b, 1.0);
   }
   return GLOW_TEXTURES[hexColor];
 }
@@ -131,12 +146,12 @@ function initSpaceBackground(scene) {
   bgGroup.add(stars);
 
   // 2. Volumetric Nebula Gas Clouds (Sprites)
-  const cloudCount = 50;
-  // Use richer, deeper colors since we are switching to Normal Blending (physical dust)
-  const cloudTexBlue = createGlowTexture(30, 60, 255, 0.25, true);
-  const cloudTexPurple = createGlowTexture(160, 30, 220, 0.2, true);
-  const cloudTexPink = createGlowTexture(220, 40, 120, 0.15, true);
-  const cloudTexDarkBlue = createGlowTexture(10, 15, 120, 0.4, true);
+  const cloudCount = 60;
+  // Use lower opacity and darker colors to avoid blowout with Additive Blending
+  const cloudTexBlue = createOrganicCloudTexture(30, 60, 255, 0.08);
+  const cloudTexPurple = createOrganicCloudTexture(120, 30, 200, 0.08);
+  const cloudTexPink = createOrganicCloudTexture(200, 40, 120, 0.05);
+  const cloudTexDarkBlue = createOrganicCloudTexture(10, 15, 120, 0.15);
   
   const textures = [cloudTexBlue, cloudTexPurple, cloudTexPink, cloudTexDarkBlue];
   
@@ -145,10 +160,10 @@ function initSpaceBackground(scene) {
     const mat = new THREE.SpriteMaterial({
       map: textures[Math.floor(Math.random() * textures.length)],
       transparent: true,
-      blending: THREE.NormalBlending, // Changed from Additive to Normal to prevent light bleeding
+      blending: THREE.AdditiveBlending, // Back to Additive for flawless, edge-free overlaps
       depthWrite: false,
-      opacity: 0.15 + Math.random() * 0.25, // Lower opacity to make them subtle dust clouds
-      dithering: true // Native Three.js dithering to help with banding
+      opacity: 0.2 + Math.random() * 0.4, // Keep opacity low so it doesn't bloom to white
+      dithering: true
     });
     const sprite = new THREE.Sprite(mat);
     
