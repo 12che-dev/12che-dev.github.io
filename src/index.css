@@ -66,7 +66,7 @@ body {
   transform: translateX(0);
 }
 
-/* Canvas Area: Deep Space Nebula Background */
+/* Canvas Area: Native WebGL Deep Space */
 .canvas-container {
   flex-grow: 1;
   position: absolute;
@@ -74,49 +74,10 @@ body {
   left: var(--sidebar-width);
   right: 0;
   bottom: 0;
-  background-color: #03040a;
+  /* Very deep black/blue background. Three.js handles the rest! */
+  background: radial-gradient(circle at center, #0a0e1c 0%, #03040a 100%);
   z-index: 1;
   overflow: hidden;
-}
-
-/* Layer 1: High-Quality Nebula Image */
-.canvas-container::before {
-  content: "";
-  position: absolute;
-  top: -10%; left: -10%; width: 120%; height: 120%;
-  background-image: url('/nebula_bg.jpg');
-  background-size: cover;
-  background-position: center;
-  opacity: 0.85;
-  z-index: -2;
-  pointer-events: none;
-  animation: nebulaDrift 120s linear infinite alternate;
-}
-
-/* Layer 2: Organic Starfield - Non-repeating technique */
-.canvas-container::after {
-  content: "";
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background-image: 
-    radial-gradient(1.5px 1.5px at 15px 25px, rgba(255,255,255,1), rgba(0,0,0,0)),
-    radial-gradient(1px 1px at 150px 75px, rgba(255,255,255,0.8), rgba(0,0,0,0)),
-    radial-gradient(2px 2px at 250px 180px, rgba(255,255,255,0.9), rgba(0,0,0,0)),
-    radial-gradient(1px 1px at 320px 250px, rgba(255,255,255,0.6), rgba(0,0,0,0)),
-    radial-gradient(2.5px 2.5px at 10px 400px, rgba(200, 220, 255, 1), rgba(0,0,0,0)),
-    
-    radial-gradient(1px 1px at 50px 60px, rgba(255,255,255,0.7), rgba(0,0,0,0)),
-    radial-gradient(2px 2px at 350px 150px, rgba(255,200,200,0.8), rgba(0,0,0,0)),
-    radial-gradient(1.5px 1.5px at 550px 450px, rgba(200,200,255,0.9), rgba(0,0,0,0));
-  
-  /* Using prime numbers for background sizes to prevent obvious tiling */
-  background-size: 401px 401px, 401px 401px, 401px 401px, 401px 401px, 401px 401px, 
-                   733px 733px, 733px 733px, 733px 733px;
-  background-position: 0 0, 0 0, 0 0, 0 0, 0 0, 
-                       20px 20px, 40px 40px, 60px 60px;
-  opacity: 0.7;
-  z-index: -1;
-  pointer-events: none;
 }
 
 @keyframes nebulaDrift {
