@@ -106,7 +106,8 @@ function initSpaceBackground(scene) {
   bgGroup.add(stars);
 
   // 2. Volumetric Nebula Gas Clouds (GPU ShaderMaterial)
-  const nebulaGeo = new THREE.SphereGeometry(4000, 32, 32);
+  // Radius is small enough to not hit far-plane, but depthTest: false makes it render infinitely far away.
+  const nebulaGeo = new THREE.SphereGeometry(1000, 32, 32);
   const shaderMat = new THREE.ShaderMaterial({
     vertexShader: `
       varying vec3 vPosition;
@@ -164,15 +165,16 @@ function initSpaceBackground(scene) {
           float n = fbm(q);
           n = abs(n); // Turbulent clouds
           
-          vec3 colBase = vec3(0.02, 0.03, 0.08); // Dark deep space background
-          vec3 colNebula1 = vec3(0.15, 0.05, 0.3); // Deep purple
-          vec3 colNebula2 = vec3(0.05, 0.2, 0.4); // Blue
-          vec3 colNebula3 = vec3(0.4, 0.1, 0.3); // Pink highlights
+          // Much brighter, vivid colors to ensure it's clearly visible
+          vec3 colBase = vec3(0.04, 0.05, 0.15); // Deep space blue
+          vec3 colNebula1 = vec3(0.4, 0.1, 0.7); // Bright purple
+          vec3 colNebula2 = vec3(0.1, 0.6, 0.8); // Cyan/Blue
+          vec3 colNebula3 = vec3(1.0, 0.3, 0.6); // Hot Pink
           
           vec3 finalCol = colBase;
-          finalCol = mix(finalCol, colNebula1, smoothstep(0.1, 0.4, n));
-          finalCol = mix(finalCol, colNebula2, smoothstep(0.3, 0.6, n));
-          finalCol = mix(finalCol, colNebula3, smoothstep(0.5, 0.8, n));
+          finalCol = mix(finalCol, colNebula1, smoothstep(0.1, 0.3, n));
+          finalCol = mix(finalCol, colNebula2, smoothstep(0.25, 0.6, n));
+          finalCol = mix(finalCol, colNebula3, smoothstep(0.5, 0.9, n));
           
           gl_FragColor = vec4(finalCol, 1.0);
       }
@@ -181,14 +183,16 @@ function initSpaceBackground(scene) {
       uTime: { value: 0 }
     },
     side: THREE.BackSide,
-    depthWrite: false
+    depthWrite: false,
+    depthTest: false // Ensures it always renders behind everything
   });
   
   const nebulaMesh = new THREE.Mesh(nebulaGeo, shaderMat);
-  bgGroup.add(nebulaMesh);
+  nebulaMesh.renderOrder = -100; // Force it to render very first
+  scene.add(nebulaMesh); // Add to scene directly so it doesn't inherit bgGroup rotation
 
   scene.add(bgGroup);
-  return { bgGroup, shaderMat };
+  return { bgGroup, shaderMat, nebulaMesh };
 }
 
 export default function GraphCanvas({ data, onNodeClick, highlightNodes, isHighlighting, selectedNodeId }) {
@@ -237,16 +241,25 @@ export default function GraphCanvas({ data, onNodeClick, highlightNodes, isHighl
 
       // 2. Animate 3D Background (Nebula & Stars)
       if (sceneState.current.bgObjects) {
-        const { bgGroup, shaderMat } = sceneState.current.bgObjects;
+        const { bgGroup, shaderMat, nebulaMesh } = sceneState.current.bgObjects;
         const time = Date.now();
         
-        // Very slow parallax rotation for the whole galaxy
+        // Very slow parallax rotation for the whole galaxy (Stars)
         bgGroup.rotation.y += 0.0003;
         bgGroup.rotation.x += 0.0001;
         
         // Flowing nebula shader
         if (shaderMat) {
            shaderMat.uniforms.uTime.value = time * 0.0001;
+        }
+
+        // Keep the nebula skybox centered on the camera so we never fly out of it
+        if (fgRef.current && nebulaMesh) {
+          const cam = fgRef.current.camera();
+          if (cam) {
+            // Because bgGroup is rotating, we need to set world position or just apply inverse
+            nebulaMesh.position.copy(cam.position);
+          }
         }
       }
 
