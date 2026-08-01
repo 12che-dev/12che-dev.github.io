@@ -187,6 +187,7 @@
   },
   "active": "13dd50aa43b20a69",
   "lastOpenFiles": [
+    "public/nebula_bg.jpg",
     "public/content/강연리뷰/GDC_강연자료/gdc강연리뷰.md",
     "public/content/fmod-basics.md",
     "dist/index.html",
@@ -231,7 +232,6 @@
     "node_modules/d3-array/README.md",
     "node_modules/property-information/readme.md",
     "node_modules/oxlint/README.md",
-    "node_modules/@tweenjs/tween.js/README.md",
-    "node_modules/vite/LICENSE.md"
+    "node_modules/@tweenjs/tween.js/README.md"
   ]
 }
