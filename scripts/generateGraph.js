@@ -52,6 +52,7 @@ function generateGraph() {
 
   // Second pass to add links, ensuring target exists
   const nodeIds = new Set(nodes.map(n => n.id));
+  const titleToId = new Map(nodes.map(n => [n.name, n.id]));
   
   files.forEach(file => {
     const filePath = file; // file is already absolute path
@@ -61,12 +62,25 @@ function generateGraph() {
 
     if (data.links && Array.isArray(data.links)) {
       data.links.forEach(targetId => {
+        // Remove surrounding brackets if they exist (e.g. "[Title]")
+        let cleanTarget = targetId.toString().replace(/^\[+|\]+$/g, '').trim();
+
+        // Check if target is a valid ID (filename) or a valid Title
+        let finalTargetId = null;
+        if (nodeIds.has(cleanTarget)) {
+          finalTargetId = cleanTarget;
+        } else if (titleToId.has(cleanTarget)) {
+          finalTargetId = titleToId.get(cleanTarget);
+        }
+
         // Only add link if target node exists!
-        if (nodeIds.has(targetId)) {
+        if (finalTargetId) {
           links.push({
             source: id,
-            target: targetId
+            target: finalTargetId
           });
+        } else {
+          console.warn(`[Sound Design Atlas] Warning: Link target not found for '${targetId}' in ${id}.md`);
         }
       });
     }
