@@ -106,17 +106,21 @@ function initSpaceBackground(scene) {
   bgGroup.add(stars);
 
   // 2. Volumetric Nebula Gas Clouds (GPU ShaderMaterial)
-  // Radius is small enough to not hit far-plane, but depthTest: false makes it render infinitely far away.
-  const nebulaGeo = new THREE.SphereGeometry(1000, 32, 32);
+  // Increased segments to 64 for smoother geometry just in case.
+  const nebulaGeo = new THREE.SphereGeometry(1000, 64, 64);
   const shaderMat = new THREE.ShaderMaterial({
     vertexShader: `
       varying vec3 vPosition;
       void main() {
-        vPosition = position;
+        // CRITICAL FIX: Normalize position in vertex shader so the varying is in [-1, 1] range.
+        // Passing radius 1000 to the fragment shader caused massive 'mediump' precision loss on Windows/ANGLE, creating grid blocks!
+        vPosition = normalize(position);
         gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
       }
     `,
     fragmentShader: `
+      precision highp float; // CRITICAL: Force high precision for math to prevent any artifacts
+      
       uniform float uTime;
       varying vec3 vPosition;
 
@@ -157,10 +161,11 @@ function initSpaceBackground(scene) {
       }
 
       void main() {
+          // vPosition is already normalized in vertex shader, but re-normalize to handle interpolation shrinkage
           vec3 p = normalize(vPosition);
           
           // Slightly larger clouds, slower movement
-          vec3 q = p * 8.0 + uTime * 0.02; 
+          vec3 q = p * 8.0 + uTime * 0.02;  
           
           float n = fbm(q);
           n = abs(n); 
