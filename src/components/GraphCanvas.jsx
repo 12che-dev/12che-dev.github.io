@@ -4,38 +4,70 @@ import * as THREE from 'three';
 import SpriteText from 'three-spritetext';
 import { CATEGORIES } from '../config';
 
-// Texture generators
-function createGlowTexture(colorStr, soft = false) {
+// Helper to parse hex color to RGB
+function hexToRgb(hex) {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : { r: 255, g: 255, b: 255 };
+}
+
+// Texture generators with Anti-Banding (Dithering)
+function createGlowTexture(r, g, b, a, soft = false) {
   const canvas = document.createElement('canvas');
-  canvas.width = 128;
-  canvas.height = 128;
+  const size = soft ? 256 : 128; // Higher resolution for soft clouds
+  canvas.width = size;
+  canvas.height = size;
   const ctx = canvas.getContext('2d');
   
-  const gradient = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+  const center = size / 2;
+  const gradient = ctx.createRadialGradient(center, center, 0, center, center, center);
+  
   if (soft) {
-    // Very soft edges for nebula clouds
-    gradient.addColorStop(0, colorStr);
-    gradient.addColorStop(0.3, colorStr);
-    gradient.addColorStop(1, 'rgba(0,0,0,0)');
+    // Smoother multi-stop curve to hide harsh edges
+    gradient.addColorStop(0, `rgba(${r},${g},${b},${a})`);
+    gradient.addColorStop(0.3, `rgba(${r},${g},${b},${a * 0.7})`);
+    gradient.addColorStop(0.6, `rgba(${r},${g},${b},${a * 0.2})`);
+    gradient.addColorStop(1, `rgba(${r},${g},${b},0)`);
   } else {
     // Sharper gradient for node stars
-    gradient.addColorStop(0, colorStr);
-    gradient.addColorStop(0.15, colorStr);
-    gradient.addColorStop(1, 'rgba(0,0,0,0)');
+    gradient.addColorStop(0, `rgba(${r},${g},${b},${a})`);
+    gradient.addColorStop(0.15, `rgba(${r},${g},${b},${a})`);
+    gradient.addColorStop(1, `rgba(${r},${g},${b},0)`);
   }
   
   ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, 128, 128);
+  ctx.fillRect(0, 0, size, size);
   
-  return new THREE.CanvasTexture(canvas);
+  // Dithering: Add subtle noise to eliminate color banding (rings)
+  if (soft) {
+    const imgData = ctx.getImageData(0, 0, size, size);
+    const data = imgData.data;
+    for (let i = 0; i < data.length; i += 4) {
+      if (data[i+3] > 0) { // Only affect non-transparent pixels
+        const noise = (Math.random() - 0.5) * 5; 
+        data[i] = Math.min(255, Math.max(0, data[i] + noise));
+        data[i+1] = Math.min(255, Math.max(0, data[i+1] + noise));
+        data[i+2] = Math.min(255, Math.max(0, data[i+2] + noise));
+      }
+    }
+    ctx.putImageData(imgData, 0, 0);
+  }
+  
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.minFilter = THREE.LinearFilter;
+  return tex;
 }
 
 const GLOW_TEXTURES = {};
-function getGlowTexture(color) {
-  if (!GLOW_TEXTURES[color]) {
-    GLOW_TEXTURES[color] = createGlowTexture(color, false);
+function getGlowTexture(hexColor) {
+  if (!GLOW_TEXTURES[hexColor]) {
+    const { r, g, b } = hexToRgb(hexColor);
+    GLOW_TEXTURES[hexColor] = createGlowTexture(r, g, b, 1.0, false);
   }
-  return GLOW_TEXTURES[color];
+  return GLOW_TEXTURES[hexColor];
 }
 
 // Procedural 3D Space Background using Three.js
@@ -97,11 +129,12 @@ function initSpaceBackground(scene) {
   bgGroup.add(stars);
 
   // 2. Volumetric Nebula Gas Clouds (Sprites)
-  const cloudCount = 60;
-  const cloudTexBlue = createGlowTexture('rgba(40, 80, 220, 0.12)', true);
-  const cloudTexPurple = createGlowTexture('rgba(140, 40, 200, 0.12)', true);
-  const cloudTexPink = createGlowTexture('rgba(200, 50, 150, 0.1)', true);
-  const cloudTexDarkBlue = createGlowTexture('rgba(10, 30, 100, 0.25)', true);
+  const cloudCount = 50;
+  // Use RGB + Alpha for the anti-banding texture generator
+  const cloudTexBlue = createGlowTexture(40, 80, 220, 0.12, true);
+  const cloudTexPurple = createGlowTexture(140, 40, 200, 0.12, true);
+  const cloudTexPink = createGlowTexture(200, 50, 150, 0.08, true);
+  const cloudTexDarkBlue = createGlowTexture(10, 30, 100, 0.25, true);
   
   const textures = [cloudTexBlue, cloudTexPurple, cloudTexPink, cloudTexDarkBlue];
   
@@ -269,23 +302,9 @@ export default function GraphCanvas({ data, onNodeClick, highlightNodes, isHighl
     return () => observer.disconnect();
   }, []);
 
-  // Idle Camera Rotation
-  useEffect(() => {
-    if (fgRef.current) {
-      let angle = 0;
-      const interval = setInterval(() => {
-        if (!hoveredNodeIdRef.current && !propsRef.current.selectedNodeId && !isDragging.current) {
-          angle += Math.PI / 2500; // Majestic slow movement
-          const distance = 400;
-          fgRef.current.cameraPosition({
-            x: distance * Math.sin(angle),
-            z: distance * Math.cos(angle)
-          });
-        }
-      }, 30);
-      return () => clearInterval(interval);
-    }
-  }, [data]);
+  // Removed custom interval camera rotation that was fighting the user controls.
+  // The OrbitControls built into react-force-graph-3d now handle mouse zoom/pan flawlessly,
+  // while the scene background itself handles the majestic rotation.
 
   const createNodeObject = React.useCallback((node) => {
     const baseColor = NODE_COLORS[node.group] || '#ffffff';
