@@ -37,58 +37,6 @@ function createGlowTexture(r, g, b, a) {
   return tex;
 }
 
-// Texture generator for organic, lumpy gas clouds (prevents lens flare/ripple artifacts)
-function createOrganicCloudTexture(r, g, b, a) {
-  const canvas = document.createElement('canvas');
-  const size = 512; 
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext('2d');
-  
-  // Helper to draw a single soft puff
-  const drawPuff = (cx, cy, radius, intensity) => {
-    const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
-    gradient.addColorStop(0, `rgba(${r},${g},${b},${intensity})`);
-    gradient.addColorStop(0.4, `rgba(${r},${g},${b},${intensity * 0.6})`);
-    gradient.addColorStop(0.8, `rgba(${r},${g},${b},${intensity * 0.1})`);
-    gradient.addColorStop(1, `rgba(${r},${g},${b},0)`);
-    ctx.fillStyle = gradient;
-    ctx.beginPath();
-    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-    ctx.fill();
-  };
-  
-  // Base central puff
-  drawPuff(size/2, size/2, size/2 * 0.8, a);
-  
-  // Add multiple random offset puffs to break the perfect circular shape
-  for (let i = 0; i < 30; i++) {
-    const angle = Math.random() * Math.PI * 2;
-    const dist = Math.random() * (size / 4);
-    const cx = size/2 + Math.cos(angle) * dist;
-    const cy = size/2 + Math.sin(angle) * dist;
-    const radius = (size / 6) + Math.random() * (size / 4);
-    drawPuff(cx, cy, radius, a * 0.7);
-  }
-  
-  // CRITICAL: Dithering to prevent 8-bit color banding/moiré patterns on large gradients
-  const imgData = ctx.getImageData(0, 0, size, size);
-  const data = imgData.data;
-  for (let i = 0; i < data.length; i += 4) {
-    if (data[i+3] > 0) {
-      const noise = (Math.random() - 0.5) * 4; 
-      data[i] = Math.min(255, Math.max(0, data[i] + noise));
-      data[i+1] = Math.min(255, Math.max(0, data[i+1] + noise));
-      data[i+2] = Math.min(255, Math.max(0, data[i+2] + noise));
-    }
-  }
-  ctx.putImageData(imgData, 0, 0);
-  
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.minFilter = THREE.LinearMipmapLinearFilter;
-  tex.magFilter = THREE.LinearFilter;
-  return tex;
-}
 
 const GLOW_TEXTURES = {};
 function getGlowTexture(hexColor) {
@@ -157,58 +105,90 @@ function initSpaceBackground(scene) {
   const stars = new THREE.Points(starGeo, starMat);
   bgGroup.add(stars);
 
-  // 2. Volumetric Nebula Gas Clouds (Sprites)
-  const cloudCount = 60;
-  // Use richer colors for Normal Blending
-  const cloudTexBlue = createOrganicCloudTexture(30, 60, 220, 0.25);
-  const cloudTexPurple = createOrganicCloudTexture(120, 30, 180, 0.2);
-  const cloudTexPink = createOrganicCloudTexture(180, 40, 100, 0.15);
-  const cloudTexDarkBlue = createOrganicCloudTexture(10, 15, 100, 0.35);
-  
-  const textures = [cloudTexBlue, cloudTexPurple, cloudTexPink, cloudTexDarkBlue];
-  
-  const clouds = [];
-  for(let i=0; i < cloudCount; i++) {
-    const mat = new THREE.SpriteMaterial({
-      map: textures[Math.floor(Math.random() * textures.length)],
-      transparent: true,
-      blending: THREE.NormalBlending, // Normal Blending prevents extreme blowout
-      depthWrite: false,
-      opacity: 0.15 + Math.random() * 0.25, // Soft opacity for subtle depth
-      dithering: true
-    });
-    const sprite = new THREE.Sprite(mat);
-    
-    // Place clouds WAY far away so camera doesn't fly through them
-    const r = 3000 + Math.random() * 2000;
-    const theta = 2 * Math.PI * Math.random();
-    // Concentrate near the equator for a 'rift' look, but allow some spread
-    const phi = Math.PI/2 + (Math.random() - 0.5) * 1.5; 
-    
-    sprite.position.x = r * Math.sin(phi) * Math.cos(theta);
-    sprite.position.y = r * Math.sin(phi) * Math.sin(theta);
-    sprite.position.z = r * Math.cos(phi);
-    
-    // Scale up proportionally since they are further away
-    const scale = 3000 + Math.random() * 4000;
-    sprite.scale.set(scale, scale, 1);
-    
-    // Initial random rotation for variety
-    sprite.material.rotation = Math.random() * Math.PI * 2;
+  // 2. Volumetric Nebula Gas Clouds (GPU ShaderMaterial)
+  const nebulaGeo = new THREE.SphereGeometry(4000, 32, 32);
+  const shaderMat = new THREE.ShaderMaterial({
+    vertexShader: `
+      varying vec3 vPosition;
+      void main() {
+        vPosition = position;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform float uTime;
+      varying vec3 vPosition;
 
-    sprite.userData = {
-      rotSpeed: (Math.random() - 0.5) * 0.002,
-      pulseSpeed: 0.001 + Math.random() * 0.001,
-      baseScale: scale,
-      phase: Math.random() * Math.PI * 2
-    };
-    
-    clouds.push(sprite);
-    bgGroup.add(sprite);
-  }
+      // Compact 3D Hash
+      vec3 hash(vec3 p) {
+          p = vec3(dot(p, vec3(127.1, 311.7, 74.7)),
+                   dot(p, vec3(269.5, 183.3, 246.1)),
+                   dot(p, vec3(113.5, 271.9, 124.6)));
+          return -1.0 + 2.0 * fract(sin(p) * 4375.85453123);
+      }
+
+      // 3D Noise
+      float noise(vec3 p) {
+          vec3 i = floor(p);
+          vec3 f = fract(p);
+          vec3 u = f * f * (3.0 - 2.0 * f);
+          return mix(mix(mix(dot(hash(i + vec3(0.0,0.0,0.0)), f - vec3(0.0,0.0,0.0)), 
+                             dot(hash(i + vec3(1.0,0.0,0.0)), f - vec3(1.0,0.0,0.0)), u.x),
+                         mix(dot(hash(i + vec3(0.0,1.0,0.0)), f - vec3(0.0,1.0,0.0)), 
+                             dot(hash(i + vec3(1.0,1.0,0.0)), f - vec3(1.0,1.0,0.0)), u.x), u.y),
+                     mix(mix(dot(hash(i + vec3(0.0,0.0,1.0)), f - vec3(0.0,0.0,1.0)), 
+                             dot(hash(i + vec3(1.0,0.0,1.0)), f - vec3(1.0,0.0,1.0)), u.x),
+                         mix(dot(hash(i + vec3(0.0,1.0,1.0)), f - vec3(0.0,1.0,1.0)), 
+                             dot(hash(i + vec3(1.0,1.0,1.0)), f - vec3(1.0,1.0,1.0)), u.x), u.y), u.z);
+      }
+
+      // Fractional Brownian Motion (FBM)
+      float fbm(vec3 x) {
+          float v = 0.0;
+          float a = 0.5;
+          vec3 shift = vec3(100.0);
+          for (int i = 0; i < 5; ++i) { 
+              v += a * noise(x);
+              x = x * 2.0 + shift;
+              a *= 0.5;
+          }
+          return v;
+      }
+
+      void main() {
+          vec3 p = normalize(vPosition);
+          // Scale controls the size of the gas clouds. 
+          // uTime creates the slow moving flow effect.
+          vec3 q = p * 2.5 + uTime * 0.1; 
+          
+          float n = fbm(q);
+          n = abs(n); // Turbulent clouds
+          
+          vec3 colBase = vec3(0.02, 0.03, 0.08); // Dark deep space background
+          vec3 colNebula1 = vec3(0.15, 0.05, 0.3); // Deep purple
+          vec3 colNebula2 = vec3(0.05, 0.2, 0.4); // Blue
+          vec3 colNebula3 = vec3(0.4, 0.1, 0.3); // Pink highlights
+          
+          vec3 finalCol = colBase;
+          finalCol = mix(finalCol, colNebula1, smoothstep(0.1, 0.4, n));
+          finalCol = mix(finalCol, colNebula2, smoothstep(0.3, 0.6, n));
+          finalCol = mix(finalCol, colNebula3, smoothstep(0.5, 0.8, n));
+          
+          gl_FragColor = vec4(finalCol, 1.0);
+      }
+    `,
+    uniforms: {
+      uTime: { value: 0 }
+    },
+    side: THREE.BackSide,
+    depthWrite: false
+  });
+  
+  const nebulaMesh = new THREE.Mesh(nebulaGeo, shaderMat);
+  bgGroup.add(nebulaMesh);
 
   scene.add(bgGroup);
-  return { bgGroup, clouds };
+  return { bgGroup, shaderMat };
 }
 
 export default function GraphCanvas({ data, onNodeClick, highlightNodes, isHighlighting, selectedNodeId }) {
@@ -257,19 +237,17 @@ export default function GraphCanvas({ data, onNodeClick, highlightNodes, isHighl
 
       // 2. Animate 3D Background (Nebula & Stars)
       if (sceneState.current.bgObjects) {
-        const { bgGroup, clouds } = sceneState.current.bgObjects;
+        const { bgGroup, shaderMat } = sceneState.current.bgObjects;
         const time = Date.now();
         
         // Very slow parallax rotation for the whole galaxy
         bgGroup.rotation.y += 0.0003;
         bgGroup.rotation.x += 0.0001;
         
-        // Dynamic volumetric clouds pulsing and twisting
-        clouds.forEach(cloud => {
-           cloud.material.rotation += cloud.userData.rotSpeed;
-           const scale = cloud.userData.baseScale * (1 + 0.15 * Math.sin(time * cloud.userData.pulseSpeed + cloud.userData.phase));
-           cloud.scale.set(scale, scale, 1);
-        });
+        // Flowing nebula shader
+        if (shaderMat) {
+           shaderMat.uniforms.uTime.value = time * 0.0001;
+        }
       }
 
       // 3. Animate Node Hover States
