@@ -74,36 +74,51 @@ body {
   left: var(--sidebar-width);
   right: 0;
   bottom: 0;
-  background: radial-gradient(circle at bottom right, #111a2f 0%, #060709 100%);
+  background-color: #060714; /* Deep space dark blue */
   z-index: 1;
   overflow: hidden;
 }
 
+/* Layer 1: Nebula Clouds / Fog */
 .canvas-container::before {
-  content: "";
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background-image: 
-    radial-gradient(1px 1px at 20px 30px, rgba(255,255,255,0.8), rgba(0,0,0,0)),
-    radial-gradient(2px 2px at 150px 70px, rgba(255,255,255,0.7), rgba(0,0,0,0)),
-    radial-gradient(1.5px 1.5px at 50px 160px, rgba(255,255,255,0.5), rgba(0,0,0,0)),
-    radial-gradient(2.5px 2.5px at 90px 40px, rgba(255,255,255,0.4), rgba(0,0,0,0)),
-    radial-gradient(1px 1px at 130px 180px, rgba(255,255,255,0.6), rgba(0,0,0,0));
-  background-repeat: repeat;
-  background-size: 250px 250px;
-  opacity: 0.7;
-  z-index: -2;
-}
-
-.canvas-container::after {
   content: "";
   position: absolute;
   top: -50%; left: -50%; width: 200%; height: 200%;
   background: 
-    radial-gradient(circle at 40% 40%, rgba(30, 80, 180, 0.15) 0%, transparent 40%),
-    radial-gradient(circle at 60% 70%, rgba(130, 40, 160, 0.15) 0%, transparent 35%);
+    radial-gradient(ellipse at 40% 30%, rgba(90, 40, 200, 0.4) 0%, transparent 40%),
+    radial-gradient(ellipse at 70% 60%, rgba(40, 110, 230, 0.3) 0%, transparent 45%),
+    radial-gradient(ellipse at 30% 70%, rgba(140, 30, 160, 0.25) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(50, 160, 255, 0.2) 0%, transparent 40%),
+    radial-gradient(ellipse at 50% 50%, rgba(180, 80, 255, 0.15) 0%, transparent 60%);
+  filter: blur(80px); /* Creates the thick volumetric fog effect */
+  z-index: -2;
   pointer-events: none;
+  animation: nebulaDrift 40s ease-in-out infinite alternate;
+}
+
+/* Layer 2: Starfield */
+.canvas-container::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: 
+    radial-gradient(1.5px 1.5px at 20px 30px, rgba(255, 255, 255, 0.9), rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 150px 70px, rgba(255, 255, 255, 0.8), rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 50px 160px, rgba(255, 255, 255, 0.6), rgba(0,0,0,0)),
+    radial-gradient(2.5px 2.5px at 90px 40px, rgba(200, 220, 255, 0.9), rgba(0,0,0,0)),
+    radial-gradient(1.5px 1.5px at 130px 180px, rgba(255, 200, 255, 0.7), rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 200px 120px, rgba(255, 255, 255, 0.8), rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 280px 50px, rgba(255, 255, 255, 0.5), rgba(0,0,0,0));
+  background-repeat: repeat;
+  background-size: 300px 300px;
+  opacity: 0.6;
   z-index: -1;
+  pointer-events: none;
+}
+
+@keyframes nebulaDrift {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(-2%, -2%) scale(1.05); }
 }
 
 /* Typography and common elements */
