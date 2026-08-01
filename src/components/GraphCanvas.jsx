@@ -132,11 +132,11 @@ function initSpaceBackground(scene) {
 
   // 2. Volumetric Nebula Gas Clouds (Sprites)
   const cloudCount = 50;
-  // Use RGB + Alpha for the anti-banding texture generator
-  const cloudTexBlue = createGlowTexture(40, 80, 220, 0.12, true);
-  const cloudTexPurple = createGlowTexture(140, 40, 200, 0.12, true);
-  const cloudTexPink = createGlowTexture(200, 50, 150, 0.08, true);
-  const cloudTexDarkBlue = createGlowTexture(10, 30, 100, 0.25, true);
+  // Use richer, deeper colors since we are switching to Normal Blending (physical dust)
+  const cloudTexBlue = createGlowTexture(30, 60, 255, 0.25, true);
+  const cloudTexPurple = createGlowTexture(160, 30, 220, 0.2, true);
+  const cloudTexPink = createGlowTexture(220, 40, 120, 0.15, true);
+  const cloudTexDarkBlue = createGlowTexture(10, 15, 120, 0.4, true);
   
   const textures = [cloudTexBlue, cloudTexPurple, cloudTexPink, cloudTexDarkBlue];
   
@@ -145,9 +145,9 @@ function initSpaceBackground(scene) {
     const mat = new THREE.SpriteMaterial({
       map: textures[Math.floor(Math.random() * textures.length)],
       transparent: true,
-      blending: THREE.AdditiveBlending,
+      blending: THREE.NormalBlending, // Changed from Additive to Normal to prevent light bleeding
       depthWrite: false,
-      opacity: 0.3 + Math.random() * 0.7,
+      opacity: 0.15 + Math.random() * 0.25, // Lower opacity to make them subtle dust clouds
       dithering: true // Native Three.js dithering to help with banding
     });
     const sprite = new THREE.Sprite(mat);
