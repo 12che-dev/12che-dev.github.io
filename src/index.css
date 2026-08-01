@@ -35,12 +35,13 @@ body {
 
 /* Panels */
 .sidebar, .detail-panel {
-  background-color: var(--panel-bg);
-  border-right: 1px solid var(--panel-border);
+  background-color: rgba(6, 8, 14, 0.7);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   flex-direction: column;
   z-index: 10;
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
 }
 
 .sidebar {
@@ -65,7 +66,7 @@ body {
   transform: translateX(0);
 }
 
-/* Canvas Area */
+/* Canvas Area: Deep Space Nebula Background */
 .canvas-container {
   flex-grow: 1;
   position: absolute;
@@ -73,8 +74,36 @@ body {
   left: var(--sidebar-width);
   right: 0;
   bottom: 0;
-  background: radial-gradient(circle at center, #11141d 0%, #060709 100%);
+  background: radial-gradient(circle at bottom right, #111a2f 0%, #060709 100%);
   z-index: 1;
+  overflow: hidden;
+}
+
+.canvas-container::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: 
+    radial-gradient(1px 1px at 20px 30px, rgba(255,255,255,0.8), rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 150px 70px, rgba(255,255,255,0.7), rgba(0,0,0,0)),
+    radial-gradient(1.5px 1.5px at 50px 160px, rgba(255,255,255,0.5), rgba(0,0,0,0)),
+    radial-gradient(2.5px 2.5px at 90px 40px, rgba(255,255,255,0.4), rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 130px 180px, rgba(255,255,255,0.6), rgba(0,0,0,0));
+  background-repeat: repeat;
+  background-size: 250px 250px;
+  opacity: 0.7;
+  z-index: -2;
+}
+
+.canvas-container::after {
+  content: "";
+  position: absolute;
+  top: -50%; left: -50%; width: 200%; height: 200%;
+  background: 
+    radial-gradient(circle at 40% 40%, rgba(30, 80, 180, 0.15) 0%, transparent 40%),
+    radial-gradient(circle at 60% 70%, rgba(130, 40, 160, 0.15) 0%, transparent 35%);
+  pointer-events: none;
+  z-index: -1;
 }
 
 /* Typography and common elements */

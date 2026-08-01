@@ -35,6 +35,10 @@
       "target": "sound-design-101"
     },
     {
+      "source": "fmod-basics",
+      "target": "gdc강연리뷰"
+    },
+    {
       "source": "gdc강연리뷰",
       "target": "Cedec강연리뷰_별의커비-디스커버리"
     }

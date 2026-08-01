@@ -1,6 +1,35 @@
-import React, { useRef, useEffect, useState } from 'react';
-import ForceGraph2D from 'react-force-graph-2d';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
+import ForceGraph3D from 'react-force-graph-3d';
+import * as THREE from 'three';
+import SpriteText from 'three-spritetext';
 import { CATEGORIES } from '../config';
+
+// Glow texture generator for star nodes
+function createGlowTexture(colorStr) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 128;
+  canvas.height = 128;
+  const ctx = canvas.getContext('2d');
+  
+  const gradient = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+  gradient.addColorStop(0, colorStr);
+  gradient.addColorStop(0.2, colorStr);
+  gradient.addColorStop(1, 'rgba(0,0,0,0)');
+  
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 128, 128);
+  
+  const texture = new THREE.CanvasTexture(canvas);
+  return texture;
+}
+
+const GLOW_TEXTURES = {};
+function getGlowTexture(color) {
+  if (!GLOW_TEXTURES[color]) {
+    GLOW_TEXTURES[color] = createGlowTexture(color);
+  }
+  return GLOW_TEXTURES[color];
+}
 
 export default function GraphCanvas({ data, onNodeClick, highlightNodes, isHighlighting, selectedNodeId }) {
   const containerRef = useRef();
@@ -10,46 +39,75 @@ export default function GraphCanvas({ data, onNodeClick, highlightNodes, isHighl
   
   // For animation loop
   const hoverStates = useRef(new Map());
-  const [, setRenderTick] = useState(0);
 
   // Refs for stable callbacks
   const isDragging = useRef(false);
   const hoveredNodeIdRef = useRef(null);
-  const propsRef = useRef({ highlightNodes, isHighlighting, selectedNodeId });
+  const propsRef = useRef({ highlightNodes, isHighlighting, selectedNodeId, nodesMap: new Map() });
   
   useEffect(() => {
-    propsRef.current = { highlightNodes, isHighlighting, selectedNodeId };
-  }, [highlightNodes, isHighlighting, selectedNodeId]);
+    const nodesMap = new Map();
+    if (data && data.nodes) {
+      data.nodes.forEach(n => nodesMap.set(n.id, n));
+    }
+    propsRef.current = { highlightNodes, isHighlighting, selectedNodeId, nodesMap };
+  }, [highlightNodes, isHighlighting, selectedNodeId, data]);
 
-  // Animation Loop Effect
+  // Convert array of categories to a color map for fast lookup
+  const NODE_COLORS = useMemo(() => {
+    return CATEGORIES.reduce((acc, cat) => {
+      acc[cat.id] = cat.color;
+      return acc;
+    }, {});
+  }, []);
+
+  // Animation Loop Effect (runs smoothly to animate hover states in 3D)
   useEffect(() => {
     let animationFrameId;
     
     const animate = () => {
-      let needsRedraw = false;
-      
       hoverStates.current.forEach((state, nodeId) => {
         const isHovered = hoveredNodeIdRef.current === nodeId || propsRef.current.selectedNodeId === nodeId;
         const target = isHovered ? 1 : 0;
         
         if (Math.abs(state.progress - target) > 0.01) {
           state.progress += (target - state.progress) * 0.12; 
-          needsRedraw = true;
         } else {
           state.progress = target; 
         }
-      });
 
-      if (needsRedraw && !isDragging.current) {
-        setRenderTick(t => t + 1); 
-      }
+        // Directly mutate the ThreeJS object to animate hover smoothly
+        const node = propsRef.current.nodesMap.get(nodeId);
+        if (node && node.__threeObj) {
+          const group = node.__threeObj;
+          const sphere = group.children[0];
+          const sprite = group.children[1];
+          const label = group.children[2];
+          
+          const p = state.progress;
+          
+          if (sphere) {
+             const baseScale = 1 + p * 0.3;
+             sphere.scale.set(baseScale, baseScale, baseScale);
+          }
+          if (sprite) {
+             const spriteScale = 20 + p * 10;
+             sprite.scale.set(spriteScale, spriteScale, 1);
+             sprite.material.opacity = 0.5 + p * 0.5;
+          }
+          if (label) {
+             label.position.y = 8 + p * 4;
+             label.material.opacity = 0.7 + p * 0.3;
+          }
+        }
+      });
       
       animationFrameId = requestAnimationFrame(animate);
     };
     
     animationFrameId = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animationFrameId);
-  }, []); // No dependencies, runs forever smoothly
+  }, []);
 
   useEffect(() => {
     const observer = new ResizeObserver((entries) => {
@@ -66,29 +124,29 @@ export default function GraphCanvas({ data, onNodeClick, highlightNodes, isHighl
     }
     
     return () => observer.disconnect();
-  }, []); // No dependencies, runs forever smoothly
+  }, []);
 
-  // Convert array of categories to a color map map for fast lookup
-  const NODE_COLORS = CATEGORIES.reduce((acc, cat) => {
-    acc[cat.id] = cat.color;
-    return acc;
-  }, {});
+  // Add auto-rotation
+  useEffect(() => {
+    if (fgRef.current) {
+      // Gently rotate the camera to feel like space
+      let angle = 0;
+      const interval = setInterval(() => {
+        if (!hoveredNodeIdRef.current && !propsRef.current.selectedNodeId && !isDragging.current) {
+          // Only rotate if not interacting
+          angle += Math.PI / 1500;
+          const distance = 400; // orbit distance
+          fgRef.current.cameraPosition({
+            x: distance * Math.sin(angle),
+            z: distance * Math.cos(angle)
+          });
+        }
+      }, 30);
+      return () => clearInterval(interval);
+    }
+  }, [data]);
 
-  const hexToRgba = (hex, op) => {
-    if (!hex) return `rgba(255, 255, 255, ${op})`;
-    const r = parseInt(hex.slice(1, 3), 16);
-    const g = parseInt(hex.slice(3, 5), 16);
-    const b = parseInt(hex.slice(5, 7), 16);
-    return `rgba(${r}, ${g}, ${b}, ${op})`;
-  };
-
-  const paintNode = React.useCallback((node, ctx, globalScale) => {
-    if (!Number.isFinite(node.x) || !Number.isFinite(node.y)) return;
-
-    const label = node.name;
-    const fontSize = 12 / globalScale;
-    ctx.font = `${fontSize}px Inter, sans-serif`;
-    
+  const createNodeObject = React.useCallback((node) => {
     const baseColor = NODE_COLORS[node.group] || '#ffffff';
     const { isHighlighting, highlightNodes } = propsRef.current;
     const isHighlighted = isHighlighting ? highlightNodes.has(node.id) : true;
@@ -96,67 +154,76 @@ export default function GraphCanvas({ data, onNodeClick, highlightNodes, isHighl
     if (!hoverStates.current.has(node.id)) {
       hoverStates.current.set(node.id, { progress: 0 });
     }
-    const progress = hoverStates.current.get(node.id).progress;
     
-    const baseR = 3.0 + (1.5 * progress); 
+    const opacity = isHighlighted ? 1 : 0.15;
+    
+    const group = new THREE.Group();
+    
+    // Core sphere (Star)
+    const geometry = new THREE.SphereGeometry(3, 16, 16);
+    const material = new THREE.MeshBasicMaterial({ 
+      color: baseColor,
+      transparent: true,
+      opacity: opacity
+    });
+    const sphere = new THREE.Mesh(geometry, material);
+    group.add(sphere);
 
+    // Glow sprite (Nebula aura)
     if (isHighlighted) {
-      const coronaR = baseR * (4 + (3 * progress)); 
-      const coronaOpacity = 0.05 + (0.05 * progress); 
-      
-      const coronaGradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, coronaR);
-      coronaGradient.addColorStop(0, hexToRgba(baseColor, coronaOpacity));
-      coronaGradient.addColorStop(1, hexToRgba(baseColor, 0));
-      
-      ctx.beginPath();
-      ctx.arc(node.x, node.y, coronaR, 0, 2 * Math.PI, false);
-      ctx.fillStyle = coronaGradient;
-      ctx.fill();
-
-      const glowR = baseR * (2 + (1.5 * progress)); 
-      const glowGradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, glowR);
-      glowGradient.addColorStop(0, hexToRgba(baseColor, 0.5 + (0.3 * progress)));
-      glowGradient.addColorStop(1, hexToRgba(baseColor, 0));
-      
-      ctx.beginPath();
-      ctx.arc(node.x, node.y, glowR, 0, 2 * Math.PI, false);
-      ctx.fillStyle = glowGradient;
-      ctx.fill();
-      
-      ctx.beginPath();
-      ctx.arc(node.x, node.y, baseR * (0.5 + 0.1 * progress), 0, 2 * Math.PI, false);
-      ctx.fillStyle = '#ffffff';
-      ctx.shadowBlur = 4 + (4 * progress);
-      ctx.shadowColor = '#ffffff';
-      ctx.fill();
-      ctx.shadowBlur = 0;
-
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillStyle = `rgba(255, 255, 255, ${0.7 + (0.3 * progress)})`;
-      ctx.shadowBlur = 4;
-      ctx.shadowColor = '#000000'; 
-      ctx.fillText(label, node.x, node.y + 10 + (4 * progress));
-      ctx.shadowBlur = 0; 
-    } else {
-      ctx.beginPath();
-      ctx.arc(node.x, node.y, baseR, 0, 2 * Math.PI, false);
-      ctx.fillStyle = hexToRgba(baseColor, 0.15);
-      ctx.fill();
+      const spriteMaterial = new THREE.SpriteMaterial({
+        map: getGlowTexture(baseColor),
+        color: baseColor,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false, // Prevents glowing square artifacts
+        opacity: 0.5
+      });
+      const sprite = new THREE.Sprite(spriteMaterial);
+      sprite.scale.set(20, 20, 1);
+      group.add(sprite);
     }
-  }, []); // Stable reference!
+
+    // Label
+    if (isHighlighted) {
+      const spriteText = new SpriteText(node.name);
+      spriteText.color = '#ffffff';
+      spriteText.textHeight = 4;
+      spriteText.fontFace = 'Inter, sans-serif';
+      spriteText.position.y = 8;
+      spriteText.material.transparent = true;
+      spriteText.material.depthWrite = false;
+      spriteText.material.opacity = 0.7;
+      group.add(spriteText);
+    }
+    
+    return group;
+  }, [NODE_COLORS]);
 
   const handleNodeHover = React.useCallback((node) => {
     hoveredNodeIdRef.current = node ? node.id : null;
-    if (!isDragging.current) setRenderTick(t => t + 1);
+    
+    if (containerRef.current) {
+      if (node) {
+        containerRef.current.style.cursor = 'pointer';
+      } else {
+        containerRef.current.style.cursor = 'default';
+      }
+    }
   }, []);
 
   const handleNodeClick = React.useCallback((node) => {
     if (fgRef.current) {
-      fgRef.current.centerAt(node.x, node.y, 800);
-      fgRef.current.zoom(2.5, 800);
+      // Focus camera on node in 3D space
+      const distance = 80;
+      const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
+      
+      fgRef.current.cameraPosition(
+        { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio }, 
+        node, 
+        1500  // ms transition duration
+      );
     }
-    // Access original prop via ref if needed, or we can just rely on closure since onNodeClick rarely changes
     onNodeClick(node);
   }, [onNodeClick]);
   
@@ -170,19 +237,19 @@ export default function GraphCanvas({ data, onNodeClick, highlightNodes, isHighl
        if (highlightNodes.has(sId) && highlightNodes.has(tId)) {
          return 'rgba(255, 255, 255, 0.4)';
        }
-       return 'rgba(255, 255, 255, 0.03)';
+       return 'rgba(255, 255, 255, 0.02)';
      }
      
      if (hoveredNodeId || selectedNodeId) {
        const activeNode = hoveredNodeId || selectedNodeId;
        if (sId === activeNode || tId === activeNode) {
-         return 'rgba(255, 255, 255, 0.5)';
+         return 'rgba(255, 255, 255, 0.6)';
        }
        return 'rgba(255, 255, 255, 0.05)';
      }
 
-     return 'rgba(255, 255, 255, 0.15)';
-  }, []); // Stable reference!
+     return 'rgba(255, 255, 255, 0.2)';
+  }, []);
 
   const getLinkWidth = React.useCallback((link) => {
      const { highlightNodes, isHighlighting, selectedNodeId } = propsRef.current;
@@ -192,33 +259,33 @@ export default function GraphCanvas({ data, onNodeClick, highlightNodes, isHighl
      
      if (hoveredNodeId || selectedNodeId) {
        const activeNode = hoveredNodeId || selectedNodeId;
-       if (sId === activeNode || tId === activeNode) return 2;
+       if (sId === activeNode || tId === activeNode) return 1.5;
      }
-     if (isHighlighting && highlightNodes.has(sId) && highlightNodes.has(tId)) return 1.5;
-     return 1;
-  }, []); // Stable reference!
+     if (isHighlighting && highlightNodes.has(sId) && highlightNodes.has(tId)) return 1.2;
+     return 0.5;
+  }, []);
 
   return (
     <div 
       ref={containerRef} 
       style={{ width: '100%', height: '100%' }}
       onContextMenu={(e) => e.preventDefault()}
+      onMouseDown={() => { isDragging.current = true; }}
+      onMouseUp={() => { isDragging.current = false; }}
+      onMouseLeave={() => { isDragging.current = false; }}
     >
-      <ForceGraph2D
+      <ForceGraph3D
         ref={fgRef}
         width={dimensions.width}
         height={dimensions.height}
         graphData={data}
-        nodeRelSize={4}
+        nodeThreeObject={createNodeObject}
         onNodeHover={handleNodeHover}
         linkColor={getLinkColor}
         linkWidth={getLinkWidth}
         onNodeClick={handleNodeClick}
-        onNodeDragStart={() => { isDragging.current = true; }}
-        onNodeDragEnd={() => { isDragging.current = false; }}
-        backgroundColor="transparent"
-        nodeCanvasObject={paintNode}
-        d3VelocityDecay={0.3}
+        backgroundColor="rgba(0,0,0,0)"
+        showNavInfo={false}
       />
     </div>
   );
