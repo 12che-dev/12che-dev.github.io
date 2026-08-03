@@ -77,7 +77,7 @@ function initSpaceBackground(scene) {
   const bgGroup = new THREE.Group();
   
   // 1. Organic Starfield (Points)
-  const starCount = 3000;
+  const starCount = 1500; // Reduced from 3000 for performance
   const starGeo = new THREE.BufferGeometry();
   const starPos = new Float32Array(starCount * 3);
   const starColors = new Float32Array(starCount * 3);
@@ -131,7 +131,7 @@ function initSpaceBackground(scene) {
   bgGroup.add(stars);
 
   // 2. Volumetric Nebula Gas Clouds (Sprites)
-  const cloudCount = 50;
+  const cloudCount = 12; // Massively reduced from 50 to fix fill-rate GPU lag on laptops
   // Use RGB + Alpha for the anti-banding texture generator
   const cloudTexBlue = createGlowTexture(40, 80, 220, 0.12, true);
   const cloudTexPurple = createGlowTexture(140, 40, 200, 0.12, true);
