@@ -214,7 +214,7 @@ export default function GraphCanvas({ data, onNodeClick, highlightNodes, isHighl
     }, {});
   }, []);
 
-  // Main Animation Loop
+  // Main Animation Loop and Cleanup
   useEffect(() => {
     let animationFrameId;
     
@@ -285,7 +285,29 @@ export default function GraphCanvas({ data, onNodeClick, highlightNodes, isHighl
     };
     
     animationFrameId = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(animationFrameId);
+    
+    // Cleanup on unmount to prevent GPU Memory Leaks
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+      if (sceneState.current.bgObjects) {
+        const { bgGroup } = sceneState.current.bgObjects;
+        bgGroup.traverse((obj) => {
+          if (obj.geometry) obj.geometry.dispose();
+          if (obj.material) {
+            if (Array.isArray(obj.material)) {
+              obj.material.forEach(m => {
+                if (m.map) m.map.dispose();
+                m.dispose();
+              });
+            } else {
+              if (obj.material.map) obj.material.map.dispose();
+              obj.material.dispose();
+            }
+          }
+        });
+        if (bgGroup.parent) bgGroup.parent.remove(bgGroup);
+      }
+    };
   }, []);
 
   useEffect(() => {
