@@ -4,7 +4,7 @@ import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import remarkFrontmatter from 'remark-frontmatter';
 
-export default function MarkdownRenderer({ filepath }) {
+export default function MarkdownRenderer({ filepath, onNavigate }) {
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -17,7 +17,11 @@ export default function MarkdownRenderer({ filepath }) {
         if (!res.ok) throw new Error('File not found');
         return res.text();
       })
-      .then(text => setContent(text))
+      .then(text => {
+        // 옵시디언의 [[Wiki 링크]] 형식을 처리하기 위해 파싱합니다.
+        const parsedText = text.replace(/\[\[(.*?)\]\]/g, '[$1](obsidian://$1)');
+        setContent(parsedText);
+      })
       .catch(err => setContent(`### 문서를 찾을 수 없습니다.\n\n\`${filepath}\` 파일이 존재하는지 확인해주세요.`))
       .finally(() => setLoading(false));
   }, [filepath]);
@@ -48,6 +52,25 @@ export default function MarkdownRenderer({ filepath }) {
               borderRadius: '0 4px 4px 0'
             }} {...props} />
           ),
+          a: ({node, href, children, ...props}) => {
+            if (href && href.startsWith('obsidian://')) {
+              const targetId = decodeURIComponent(href.replace('obsidian://', ''));
+              return (
+                <a 
+                  href="#" 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (onNavigate) onNavigate(targetId);
+                  }}
+                  style={{ color: 'var(--accent-color)', textDecoration: 'none', borderBottom: '1px dotted var(--accent-color)', cursor: 'pointer' }}
+                  {...props}
+                >
+                  {children}
+                </a>
+              );
+            }
+            return <a href={href} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-color)' }} {...props}>{children}</a>;
+          },
           code: ({node, inline, className, children, ...props}) => {
             return inline ? (
               <code style={{ background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '4px', fontFamily: 'monospace', fontSize: '0.9em' }} {...props}>

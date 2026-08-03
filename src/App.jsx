@@ -25,6 +25,15 @@ function App() {
     }
   };
 
+  const handleNavigate = (targetId) => {
+    const targetNode = graphData.nodes.find(n => n.id === targetId || n.name === targetId);
+    if (targetNode) {
+      handleNodeClick(targetNode);
+    } else {
+      console.warn('Navigation target not found:', targetId);
+    }
+  };
+
   const highlightNodes = new Set();
   
   if (selectedCategory !== null) {
@@ -77,7 +86,7 @@ function App() {
       </aside>
 
       {/* Main Graph Canvas */}
-      <main className="canvas-container">
+      <main className="canvas-container" onContextMenu={(e) => e.preventDefault()}>
         <GraphCanvas 
           data={graphData} 
           onNodeClick={handleNodeClick} 
@@ -115,7 +124,10 @@ function App() {
               </h2>
               
               <div className="markdown-content">
-                <MarkdownRenderer filepath={`/content/${selectedNode.path || selectedNode.id + '.md'}`} />
+                <MarkdownRenderer 
+                  filepath={`/content/${selectedNode.path || selectedNode.id + '.md'}`} 
+                  onNavigate={handleNavigate}
+                />
               </div>
             </div>
           </>
