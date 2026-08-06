@@ -18,8 +18,10 @@ export default function MarkdownRenderer({ filepath, onNavigate }) {
         return res.text();
       })
       .then(text => {
-        // 옵시디언의 [[Wiki 링크]] 형식을 처리하기 위해 파싱합니다.
-        const parsedText = text.replace(/\[\[(.*?)\]\]/g, '[$1](obsidian://$1)');
+        // 옵시디언의 형식 처리: ![[이미지]] 와 [[링크]]
+        const parsedText = text
+          .replace(/!\[\[(.*?)\]\]/g, '![$1](obsidian-img://$1)')
+          .replace(/\[\[(.*?)\]\]/g, '[$1](obsidian-link://$1)');
         setContent(parsedText);
       })
       .catch(err => setContent(`### 문서를 찾을 수 없습니다.\n\n\`${filepath}\` 파일이 존재하는지 확인해주세요.`))
@@ -52,9 +54,28 @@ export default function MarkdownRenderer({ filepath, onNavigate }) {
               borderRadius: '0 4px 4px 0'
             }} {...props} />
           ),
+          img: ({node, src, alt, ...props}) => {
+            let resolvedSrc = src;
+            if (src && !src.startsWith('http') && !src.startsWith('data:')) {
+              // Get the directory of the current markdown file
+              const baseDir = filepath.substring(0, filepath.lastIndexOf('/'));
+              
+              if (src.startsWith('obsidian-img://')) {
+                // Handle ![[Pasted image.png]] format
+                const filename = decodeURIComponent(src.replace('obsidian-img://', ''));
+                resolvedSrc = `/${baseDir}/media/${encodeURIComponent(filename)}`;
+              } else {
+                // Handle standard markdown relative paths like ./media/image.png
+                let cleanSrc = src.startsWith('./') ? src.slice(2) : src;
+                const encodedPath = cleanSrc.split('/').map(p => encodeURIComponent(decodeURIComponent(p))).join('/');
+                resolvedSrc = `/${baseDir}/${encodedPath}`;
+              }
+            }
+            return <img src={resolvedSrc} alt={alt} style={{ maxWidth: '100%', height: 'auto', borderRadius: '8px', margin: '16px 0' }} {...props} />;
+          },
           a: ({node, href, children, ...props}) => {
-            if (href && href.startsWith('obsidian://')) {
-              const targetId = decodeURIComponent(href.replace('obsidian://', ''));
+            if (href && href.startsWith('obsidian-link://')) {
+              const targetId = decodeURIComponent(href.replace('obsidian-link://', ''));
               return (
                 <a 
                   href="#" 
