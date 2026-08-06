@@ -394,12 +394,37 @@ export default function GraphCanvas({ data, onNodeClick, highlightNodes, isHighl
 
   const handleNodeClick = React.useCallback((node) => {
     if (fgRef.current) {
+      // 1. Calculate base camera position (zoomed out from the node)
       const distance = 80;
       const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
       
+      const camPos = new THREE.Vector3(
+        node.x * distRatio,
+        node.y * distRatio,
+        node.z * distRatio
+      );
+
+      // 2. Calculate the 'Right' vector relative to the camera view
+      const targetPos = new THREE.Vector3(node.x, node.y, node.z);
+      const up = new THREE.Vector3(0, 1, 0);
+      
+      // Look direction from Camera TO Node
+      const lookDir = new THREE.Vector3().subVectors(targetPos, camPos).normalize();
+      
+      // Cross product of look direction and UP gives us the 'Right' vector
+      const rightDir = new THREE.Vector3().crossVectors(lookDir, up).normalize();
+      
+      // 3. Offset both the camera and the look-at target to the RIGHT
+      // By moving the camera and target to the RIGHT, the node appears on the LEFT of the screen.
+      // This prevents the glowing star from overlapping with the right-side Markdown panel!
+      const offsetAmount = 35; // Adjust this to push the node further left
+      
+      camPos.addScaledVector(rightDir, offsetAmount);
+      targetPos.addScaledVector(rightDir, offsetAmount);
+      
       fgRef.current.cameraPosition(
-        { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio }, 
-        node, 
+        camPos, 
+        targetPos, 
         1500
       );
     }
