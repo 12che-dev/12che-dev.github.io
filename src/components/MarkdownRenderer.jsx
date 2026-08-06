@@ -15,6 +15,9 @@ export default function MarkdownRenderer({ filepath, onNavigate }) {
     fetch(filepath)
       .then(res => {
         if (!res.ok) throw new Error('File not found');
+        return res.text();
+      })
+      .then(text => {
         // 옵시디언의 형식 처리: ![[이미지]] 와 [[링크]]
         // 마크다운 파서가 띄어쓰기를 링크로 인식하지 못하는 문제를 막기 위해 인코딩 처리
         const parsedText = text
@@ -22,7 +25,10 @@ export default function MarkdownRenderer({ filepath, onNavigate }) {
           .replace(/\[\[(.*?)\]\]/g, (match, p1) => `[${p1}](obsidian-link://${encodeURIComponent(p1)})`);
         setContent(parsedText);
       })
-      .catch(err => setContent(`### 문서를 찾을 수 없습니다.\n\n\`${filepath}\` 파일이 존재하는지 확인해주세요.`))
+      .catch(err => {
+        console.error('Error fetching markdown:', err);
+        setContent(`### 문서를 찾을 수 없습니다.\n\n\`${filepath}\` 파일이 존재하는지 확인해주세요.`);
+      })
       .finally(() => setLoading(false));
   }, [filepath]);
 
