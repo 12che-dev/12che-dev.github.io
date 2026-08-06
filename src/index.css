@@ -9,7 +9,7 @@
   --accent-color: #00f0ff; 
   
   --sidebar-width: 320px;
-  --right-panel-width: 480px;
+  --right-panel-width: 800px;
 }
 
 * {
@@ -51,6 +51,7 @@ body {
 
 .detail-panel {
   width: var(--right-panel-width);
+  max-width: 85vw;
   border-left: 1px solid var(--panel-border);
   border-right: none;
   transform: translateX(100%);
