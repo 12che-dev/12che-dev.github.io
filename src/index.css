@@ -204,3 +204,17 @@ h1, h2, h3 {
   border-radius: 8px;
   margin: 16px 0;
 }
+
+/* Handle multiple images in a single line/paragraph (side-by-side rendering) */
+.markdown-content p:has(img:nth-of-type(2)) {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  margin: 16px 0;
+}
+
+.markdown-content p:has(img:nth-of-type(2)) img {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+}
