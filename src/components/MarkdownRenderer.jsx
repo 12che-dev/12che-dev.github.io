@@ -15,13 +15,11 @@ export default function MarkdownRenderer({ filepath, onNavigate }) {
     fetch(filepath)
       .then(res => {
         if (!res.ok) throw new Error('File not found');
-        return res.text();
-      })
-      .then(text => {
         // 옵시디언의 형식 처리: ![[이미지]] 와 [[링크]]
+        // 마크다운 파서가 띄어쓰기를 링크로 인식하지 못하는 문제를 막기 위해 인코딩 처리
         const parsedText = text
-          .replace(/!\[\[(.*?)\]\]/g, '![$1](obsidian-img://$1)')
-          .replace(/\[\[(.*?)\]\]/g, '[$1](obsidian-link://$1)');
+          .replace(/!\[\[(.*?)\]\]/g, (match, p1) => `![${p1}](obsidian-img://${encodeURIComponent(p1)})`)
+          .replace(/\[\[(.*?)\]\]/g, (match, p1) => `[${p1}](obsidian-link://${encodeURIComponent(p1)})`);
         setContent(parsedText);
       })
       .catch(err => setContent(`### 문서를 찾을 수 없습니다.\n\n\`${filepath}\` 파일이 존재하는지 확인해주세요.`))
@@ -58,7 +56,8 @@ export default function MarkdownRenderer({ filepath, onNavigate }) {
             let resolvedSrc = src;
             if (src && !src.startsWith('http') && !src.startsWith('data:')) {
               // Get the directory of the current markdown file
-              const baseDir = filepath.substring(0, filepath.lastIndexOf('/'));
+              let baseDir = filepath.substring(0, filepath.lastIndexOf('/'));
+              if (baseDir.startsWith('/')) baseDir = baseDir.substring(1); // Remove leading slash for safe joining
               
               if (src.startsWith('obsidian-img://')) {
                 // Handle ![[Pasted image.png]] format
@@ -67,6 +66,12 @@ export default function MarkdownRenderer({ filepath, onNavigate }) {
               } else {
                 // Handle standard markdown relative paths like ./media/image.png
                 let cleanSrc = src.startsWith('./') ? src.slice(2) : src;
+                
+                // If it's just a filename without a folder, assume it's in media/
+                if (!cleanSrc.includes('/')) {
+                   cleanSrc = `media/${cleanSrc}`;
+                }
+                
                 const encodedPath = cleanSrc.split('/').map(p => encodeURIComponent(decodeURIComponent(p))).join('/');
                 resolvedSrc = `/${baseDir}/${encodedPath}`;
               }
