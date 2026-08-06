@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "public/content/역기획/템플릿.md",
+                "file": "public/content/강연리뷰/cedec_강연자료/CEDEC_별의 커비 디스커버리.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "템플릿"
+              "title": "CEDEC_별의 커비 디스커버리"
             }
           }
         ]
@@ -187,10 +187,17 @@
   },
   "active": "13dd50aa43b20a69",
   "lastOpenFiles": [
-    "public/content/강연리뷰/cedec_강연자료/cedec_커비.md",
+    "Pasted image 20260806160753.png",
+    "Pasted image 20260806160736.png",
+    "Pasted image 20260806155812.png",
+    "Pasted image 20260806155712.png",
+    "Pasted image 20260806155655.png",
+    "Pasted image 20260806155012.png",
+    "public/content/강연리뷰/GDC_강연자료/gdc강연리뷰.md",
+    "public/content/강연리뷰/cedec_강연자료/CEDEC_별의 커비 디스커버리.md",
     "public/content/역기획/템플릿.md",
+    "public/content/강연리뷰/cedec_강연자료/cedec_커비.md",
     "public/content/역기획",
-    "public/content/강연리뷰/cedec_강연자료/cedec_별의 커비-디스커버리.md",
     "public/content/강연리뷰/cedec_강연자료/별의커비-디스커버리/Cedec강연리뷰_별의커비-디스커버리.md",
     "public/content/강연리뷰/cedec_강연자료/『星のカービィ　ディスカバリー』 カービィらしさを継承し、再構築したサウンド表現/『星のカービィ　ディスカバリー』 カービィらしさを継承し、再構築したサウンド表現.md",
     "public/content/강연리뷰/cedec_강연자료/『星のカービィ　ディスカバリー』 カービィらしさを継承し、再構築したサウンド表現/media/image147.png",
@@ -198,11 +205,6 @@
     "public/content/강연리뷰/cedec_강연자료/『星のカービィ　ディスカバリー』 カービィらしさを継承し、再構築したサウンド表現/media/image145.png",
     "public/content/강연리뷰/cedec_강연자료/『星のカービィ　ディスカバリー』 カービィらしさを継承し、再構築したサウンド表現/media/image144.png",
     "public/content/강연리뷰/cedec_강연자료/『星のカービィ　ディスカバリー』 カービィらしさを継承し、再構築したサウンド表現/media/image143.png",
-    "public/content/강연리뷰/cedec_강연자료/『星のカービィ　ディスカバリー』 カービィらしさを継承し、再構築したサウンド表現/media/image142.png",
-    "public/content/강연리뷰/cedec_강연자료/『星のカービィ　ディスカバリー』 カービィらしさを継承し、再構築したサウンド表現/media/image141.jpg",
-    "public/content/강연리뷰/cedec_강연자료/『星のカービィ　ディスカバリー』 カービィらしさを継承し、再構築したサウンド表現/media/image140.jpg",
-    "public/content/강연리뷰/cedec_강연자료/『星のカービィ　ディスカバリー』 カービィらしさを継承し、再構築したサウンド表現/media/image139.png",
-    "public/content/강연리뷰/cedec_강연자료/『星のカービィ　ディスカバリー』 カービィらしさを継承し、再構築したサウンド表現/media/image138.png",
     "public/content/강연리뷰/cedec_강연자료/『星のカービィ　ディスカバリー』 カービィらしさを継承し、再構築したサウンド表現/media",
     "public/content/강연리뷰/cedec_강연자료/『星のカービィ　ディスカバリー』 カービィらしさを継承し、再構築したサウンド表現",
     "scripts/pptx-archiver/pptx-to-md.cjs",
@@ -230,8 +232,6 @@
     "node_modules/three/examples/jsm/libs/draco/README.md",
     "node_modules/three/examples/jsm/libs/basis/README.md",
     "node_modules/polished/README.md",
-    "node_modules/polished/LICENSE.md",
-    "node_modules/mdast-util-to-markdown/readme.md",
-    "node_modules/preact/README.md"
+    "node_modules/polished/LICENSE.md"
   ]
 }
