@@ -41,23 +41,14 @@ export default function MarkdownRenderer({ filepath, onNavigate }) {
         remarkPlugins={[remarkGfm, remarkFrontmatter]}
         rehypePlugins={[rehypeRaw]}
         components={{
-          h1: ({node, ...props}) => <h1 style={{ fontSize: '1.8em', borderBottom: '1px solid var(--panel-border)', paddingBottom: '8px', marginBottom: '16px', color: '#fff' }} {...props} />,
-          h2: ({node, ...props}) => <h2 style={{ fontSize: '1.4em', marginTop: '24px', marginBottom: '12px', color: 'var(--accent-color)' }} {...props} />,
-          h3: ({node, ...props}) => <h3 style={{ fontSize: '1.2em', marginTop: '20px', marginBottom: '12px' }} {...props} />,
-          p: ({node, ...props}) => <p style={{ marginBottom: '16px' }} {...props} />,
-          ul: ({node, ...props}) => <ul style={{ paddingLeft: '24px', marginBottom: '16px' }} {...props} />,
-          li: ({node, ...props}) => <li style={{ marginBottom: '8px' }} {...props} />,
-          blockquote: ({node, ...props}) => (
-            <blockquote style={{ 
-              borderLeft: '4px solid var(--accent-color)', 
-              paddingLeft: '16px', 
-              margin: '16px 0', 
-              color: 'var(--text-muted)',
-              background: 'rgba(0, 240, 255, 0.05)',
-              padding: '12px 16px',
-              borderRadius: '0 4px 4px 0'
-            }} {...props} />
-          ),
+          h1: ({node, ...props}) => <h1 {...props} />,
+          h2: ({node, ...props}) => <h2 {...props} />,
+          h3: ({node, ...props}) => <h3 {...props} />,
+          p: ({node, ...props}) => <p {...props} />,
+          ul: ({node, ...props}) => <ul {...props} />,
+          ol: ({node, ...props}) => <ol {...props} />,
+          li: ({node, ...props}) => <li {...props} />,
+          blockquote: ({node, ...props}) => <blockquote {...props} />,
           img: ({node, src, alt, ...props}) => {
             let resolvedSrc = src;
             if (src && !src.startsWith('http') && !src.startsWith('data:')) {

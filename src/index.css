@@ -189,6 +189,68 @@ h1, h2, h3 {
 }
 
 /* Markdown Specific Styles */
+.markdown-content {
+  line-height: 1.7;
+}
+
+.markdown-content h1 {
+  font-size: 2em;
+  font-weight: 800;
+  color: #ffffff;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 12px;
+  margin-top: 10px;
+  margin-bottom: 24px;
+}
+
+.markdown-content h2 {
+  font-size: 1.45em;
+  font-weight: 700;
+  color: var(--accent-color);
+  margin-top: 40px;
+  margin-bottom: 16px;
+  padding-left: 12px;
+  border-left: 4px solid var(--accent-color);
+}
+
+.markdown-content h3 {
+  font-size: 1.2em;
+  font-weight: 600;
+  color: #94a3b8;
+  margin-top: 28px;
+  margin-bottom: 12px;
+}
+
+.markdown-content p {
+  margin-bottom: 16px;
+}
+
+.markdown-content ul, .markdown-content ol {
+  padding-left: 28px;
+  margin-bottom: 20px;
+}
+
+.markdown-content li {
+  margin-bottom: 10px;
+}
+
+.markdown-content li > ul, .markdown-content li > ol {
+  margin-top: 10px;
+  margin-bottom: 0;
+}
+
+.markdown-content blockquote {
+  border-left: 4px solid var(--accent-color);
+  padding: 16px 20px;
+  margin: 24px 0;
+  color: #cbd5e1;
+  background: rgba(0, 240, 255, 0.05);
+  border-radius: 0 8px 8px 0;
+}
+
+.markdown-content blockquote p:last-child {
+  margin-bottom: 0;
+}
 .markdown-content video, .markdown-content audio {
   width: 100%;
   border-radius: 8px;
