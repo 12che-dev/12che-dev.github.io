@@ -23,12 +23,16 @@ export default function MarkdownRenderer({ filepath, onNavigate }) {
         // 옵시디언의 형식 처리: ![[이미지]] 와 [[링크]]
         // 마크다운 파서가 띄어쓰기를 링크로 인식하지 못하는 문제를 막기 위해 인코딩 처리
         const parsedText = text
+          // 일반 마크다운 이미지 태그 뒤에 |주석 이 붙은 경우 처리: ![alt](url|caption)
+          .replace(/!\[([^\]]*)\]\(([^)]+)\|([^)]+)\)/g, (match, alt, url, caption) => `![${caption}](${url})`)
+          // 옵시디언 형식 이미지 처리
           .replace(/!\[\[(.*?)\]\]/g, (match, p1) => {
             const parts = p1.split('|');
             const filename = parts[0];
             const altText = parts[1] || filename; // If there's a |, use the second part as alt text
             return `![${altText}](obsidian-img://${encodeURIComponent(filename)})`;
           })
+          // 옵시디언 형식 링크 처리
           .replace(/\[\[(.*?)\]\]/g, (match, p1) => {
             const parts = p1.split('|');
             const target = parts[0];
