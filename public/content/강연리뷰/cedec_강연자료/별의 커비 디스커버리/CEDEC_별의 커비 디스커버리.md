@@ -63,7 +63,8 @@ tags:
 ### 적용 예시: 보스전 앞 스테이지 BGM 「무서운 짐승의 냄새」
 이번 작에서는 '스테이지 진행 -> 로딩(문) -> 보스 등장 컷신 -> 보스전'의 흐름이 로딩 없이 심리스하게 이어집니다. 불길함 -> 긴장/놀람 -> 백열하는 전투로 이어지는 플레이어의 감정선에 맞춰 음악도 멈춤 없이 이어지도록 설계했습니다.
 
-![](media1.mp4)
+<iframe width="560" height="315" src="https://www.youtube.com/embed/_kLuzaPnf9k?si=91xYRBLoyfuU5wtP" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
 
 곡은 역할에 따라 4종류의 블록으로 구조화되었습니다.
 
@@ -78,7 +79,8 @@ tags:
 Body에서 바로 Tail로 넘어가면 멜로디가 강제로 끊깁니다. 하지만 멜로디가 없고 모호한 Bridge를 경계선으로 거치게 함으로써, 박자나 소절을 무시하고 즉각적으로 전환하더라도 위화감을 최소화할 수 있었습니다. 
 맵 상의 지정된 구역(보스방 앞)에 들어가면 Body에서 Bridge로 넘어가고, 보스 등장 컷신이 시작되면 Tail로 넘어갑니다. 
 
-![](media6.mp4)
+<iframe width="560" height="315" src="https://www.youtube.com/embed/O_fCNRXebfc?si=-hLhU-UqFnN1WsNR" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
 
 **세밀한 튜닝과 디테일**:
 *   맵의 길이에 따라 Bridge 구역의 크기를 조절했습니다. 너무 길면 단순한 음악에 지루해지고, 너무 짧으면 Bridge 재생이 끝나기 전에 컷신에 돌입해버리기 때문에 커비의 이동 속도를 바꿔가며 끝없이 테스트 플레이를 거쳤습니다.
@@ -92,8 +94,8 @@ Body에서 바로 Tail로 넘어가면 멜로디가 강제로 끊깁니다. 하�
 
 *   스토리상 중요한 디디디 대왕의 등장 컷신에서는 다른 보스들과 달리 디디디 대왕의 라이트모티프(주제부)가 섞인 전용 Tail 곡을 사용해 놀라움을 주었습니다.
 
-    ![](media7.mp4)
-
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/yKsj80wrdcw?si=_IP1pllCEGyINDwl" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    
 ### 전환을 쉽게 만드는 작곡 기법
 1.  **코드와 베이스음의 단순화**: 복잡한 화성이나 베이스 진행은 전환 시 연결을 어색하게 만듭니다. 앞서 말한 「무서운 짐승의 냄새」의 Body 부분은 D 온 코드 하나로만, 중간 보스전 Body는 Am와 Bb7만으로 구성하여 언제든 넘어갈 수 있는 타이밍을 늘렸습니다.
 
@@ -130,28 +132,32 @@ Body에서 바로 Tail로 넘어가면 멜로디가 강제로 끊깁니다. 하�
 
 **해결책**: 리스너를 **'화면의 중심이면서 깊이상으로는 커비와 가까운 지점(카메라 중심)'에 배치했습니다.** 이를 통해 좌우 쏠림을 방지하면서도 플레이어 근처의 중요한 액션 소리를 가장 잘 들리게 만들 수 있었습니다.
 
-![](media11.mp4)
+<iframe width="560" height="315" src="https://www.youtube.com/embed/NHCgtiR3mw8?si=Z9P5HP0rr89hiTJP" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 ### 상황에 따른 유연한 개별 대응
 기본은 '카메라 중심'이지만, 획일화하지 않고 상황에 맞게 개별 대응했습니다.
 
 1.  **맵별 특수화**: 독특한 카메라 워크가 쓰이는 맵은 인하우스 실시간 파라미터 편집 툴 'Cinemo'를 이용해 맵마다 리스너 파라미터를 개별 조정했습니다.
     
-    ![](media12.mp4)
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/vrsrPiomJrs?si=PXTEAZh0qup6Mfec" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    
 
 2.  **보스전 효과음**: 보스전만큼은 박력과 임장감을 중시하여 리스너를 '커비 위치'로 옮겨 소리 변화와 방향성이 화려하게 느껴지도록 했습니다.
     
-    ![](media13.mp4)
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/3wwvTtkMlhM?si=rN45EkKkAtKLRWsY" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    
 
 3.  **음량과 패닝의 계산 기준 분리**: 예외적으로 공간을 인지해야 하는 '환경음'이나 '탐색 힌트음'은 게임 화면(화면 위치 기준)대로 들리게 패닝을 계산하고, 액션의 상호작용이 중요한 소리는 음량 변화를 캐릭터 위치 기준으로 계산했습니다.
     
-    ![](media14.mp4)
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/SldtYVesh24?si=4sznAXH9cmbWfEFc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    
 
 4.  **플레이 편의성과 박력의 충돌 (기갓초 포탄 사례)**: 
     *   포탄 소리는 '가까이(위협 범위 내) 있을 때만 확실히 들려야 한다'는 플레이 편의성 조건과, '멀리서부터 포성이 울려 퍼지는 분위기를 연출해야 한다'는 박력 조건이 모순되었습니다. 
     *   이는 3D 파라미터 조정만으로는 불가능했습니다. 결국 같은 파형을 쓰는 것을 포기하고, 철저히 용도(근접 위협용 / 원거리 연출용)에 맞게 디자인된 완전히 별개의 파형 두 개를 따로 배치하는 꼼꼼함으로 분위기와 편의성을 모두 잡아냈습니다.
     
-    ![](media15.mp4)
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/JT2IMRfF-Bw?si=Jo1tG39iNZo202_q" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    
 ---
 
 ## 4. 게임을 위한 사운드 연출
@@ -171,7 +177,8 @@ Body에서 바로 Tail로 넘어가면 멜로디가 강제로 끊깁니다. 하�
       
       ![466](Pasted%20image%2020260818155703.png)
       
-      ![](media16.mp4)
+      <iframe width="560" height="315" src="https://www.youtube.com/embed/CaMk0VzoPSc?si=40V7xR5Y-UVr60n3" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+      
 ### ② 환경음에 숨겨진 음악적 재미
 기존 2D 커비에서는 배경이나 공기감을 곡 자체로 표현하는 경우가 많아 환경음을 적극적으로 쓰지 않았지만, 3D가 되면서 탐색 요소와 공간감이 중요해져 환경음이 대폭 늘어났습니다.
 
@@ -179,4 +186,5 @@ Body에서 바로 Tail로 넘어가면 멜로디가 강제로 끊깁니다. 하�
 *   기계나 자연의 효과음에 음정감을 부여하고, 멜로디나 모티브가 느껴지도록 음을 조합했습니다. 
 *   평소에는 평범한 환경음처럼 들리지만 주의 깊게 들으면 음악적으로 들리는 절묘한 밸런스로 배치하여, 소리만으로도 유저가 "발견하는 재미와 놀라움"을 느낄 수 있도록 연출했습니다.
   
-  ![](media17.mp4)
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/c9njPx-t0Dw?si=q-dp4_ogYNXeEYgA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+  
