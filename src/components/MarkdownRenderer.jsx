@@ -95,14 +95,23 @@ export default function MarkdownRenderer({ filepath, onNavigate }) {
 
               // Check if alt text is actually a meaningful caption (not just a filename/number)
               const isCaption = alt && !alt.startsWith('Pasted image') && isNaN(Number(alt));
+              const isVideo = resolvedSrc.match(/\.(mp4|webm|ogg|mov)$/i);
 
               return (
                 <span 
                   className="image-wrapper" 
-                  style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', cursor: 'zoom-in', margin: '16px 0', width: '100%' }}
-                  onClick={() => setSelectedImage({ src: resolvedSrc, alt: isCaption ? alt : '' })}
+                  style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', cursor: isVideo ? 'default' : 'zoom-in', margin: '16px 0', width: '100%' }}
+                  onClick={() => {
+                    if (!isVideo) {
+                      setSelectedImage({ src: resolvedSrc, alt: isCaption ? alt : '' });
+                    }
+                  }}
                 >
-                  <img src={resolvedSrc} alt={alt} style={{ maxWidth: '100%', height: 'auto', borderRadius: '8px', margin: 0 }} {...props} />
+                  {isVideo ? (
+                    <video src={resolvedSrc} controls style={{ maxWidth: '100%', borderRadius: '8px', margin: 0, backgroundColor: '#000' }} />
+                  ) : (
+                    <img src={resolvedSrc} alt={alt} style={{ maxWidth: '100%', height: 'auto', borderRadius: '8px', margin: 0 }} {...props} />
+                  )}
                   {isCaption && (
                     <span style={{ fontSize: '0.85em', color: 'var(--text-muted)', marginTop: '8px', textAlign: 'center', display: 'block', width: '100%' }}>
                       {alt}
