@@ -1,4 +1,5 @@
 {
   "useMarkdownLinks": true,
-  "attachmentFolderPath": "./media"
+  "attachmentFolderPath": "./media",
+  "promptDelete": false
 }
